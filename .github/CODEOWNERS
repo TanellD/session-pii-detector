@@ -1,0 +1,8 @@
+# Заменить @owner-* на GitHub-логины после распределения ролей (docs/project/team.md)
+*                        @owner-lead
+/docs/data/              @owner-data
+/data/                   @owner-data
+/src/                    @owner-detector
+/benchmarks/             @owner-eval
+/docs/kb/metrics.md      @owner-eval
+/deliverables/           @owner-lead

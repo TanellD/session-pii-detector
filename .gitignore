@@ -1,0 +1,34 @@
+# Данные — вне git (см. data/README.md)
+data/*
+!data/README.md
+
+# Артефакты прогонов
+runs/
+outputs/
+mlruns/
+wandb/
+*.ckpt
+*.pt
+*.bin
+*.safetensors
+
+# Окружение и секреты
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Сборка документации и презентаций
+site/
+deliverables/**/*.pdf
+deliverables/**/*.pptx
+
+# ОС / IDE
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.obsidian/workspace*
