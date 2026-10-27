@@ -1,8 +1,3 @@
-# Заменить @owner-* на GitHub-логины после распределения ролей (docs/project/team.md)
-*                        @owner-lead
-/docs/data/              @owner-data
-/data/                   @owner-data
-/src/                    @owner-detector
-/benchmarks/             @owner-eval
-/docs/kb/metrics.md      @owner-eval
-/deliverables/           @owner-lead
+# Пока зоны не распределены, всё ревьюит лид. После распределения ролей (этап 2) разнести по зонам:
+# /docs/data/ и /data/ — data, /src/ — detector, /benchmarks/ и /docs/kb/metrics.md — eval, /deliverables/ — lead
+*                        @TanellD

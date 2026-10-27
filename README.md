@@ -26,3 +26,6 @@
 
 ## Быстрый старт
 _Появится на этапе MVP. Запуск будет описан здесь и в skill `.claude/skills/run-eval/`._
+
+## Лицензия
+На выбор: [MIT](LICENSE-MIT) или [Apache-2.0](LICENSE-APACHE).
