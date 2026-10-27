@@ -3,7 +3,7 @@
 ## Задачи
 - Все задачи — issues в GitHub, все issues — на [доске GitHub Projects](https://github.com/users/TanellD/projects/1).
 - Колонки: `Backlog → To do (этот этап) → In progress → Review → Done`.
-- Метки: `stage-1..4`, `research`, `data`, `model`, `eval`, `infra`, `docs`, `deliverable`, `question`.
+- Метки: `stage-1..4`, `research`, `data`, `model`, `eval`, `infra`, `docs`, `deliverable`, `question`, `bug`.
 - Майлстоуны = чекпоинты: `Ч1 05.11`, `Ч2 01.12`, `Ч3 15.12`, `Ч4 защита`.
 - У задачи один исполнитель. Если задача дольше 3 дней, разбей её.
 
