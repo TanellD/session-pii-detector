@@ -1,20 +1,33 @@
 # Эксперимент #12: regex + GLiNER на русском, CPU
 
+Исторический отчёт исходного набора v1. Исправления воспроизводимости и расширенная
+проверка ФИО — в [эксперименте v2](2026-11-02-task12-gliner-cpu-v2.md).
+Новое измерение не заменяет приведённые ниже исходные результаты.
+
 Дата: 02.11.2026. Автор: `Kopylov-Andrey`. Issue: #12. Статус: выполнен локально.
 
 Гипотеза: форматные правила дополняют zero-shot NER; новые семантические классы требуют проверки.
 
 ## Воспроизведение
 
-[Команды и ограничения](../../benchmarks/pii_smoke/README.md). Из корня репо:
+[Окружение и ограничения](../../benchmarks/pii_smoke/README.md). Повторный
+расчёт приведённых здесь **сохранённых** чисел из корня репозитория:
 
 ```powershell
-.\.venv-research\Scripts\python.exe -m benchmarks.pii_smoke.dataset
-.\.venv-research\Scripts\python.exe -m benchmarks.pii_smoke.run
-.\.venv-research\Scripts\python.exe -m benchmarks.pii_smoke.report
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.report --input runs/task12-smoke
 ```
 
-Перед run подготовить кеш и включить offline, как в README.
+Новый замер исходных фраз после подготовки модели и offline по README:
+
+```powershell
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.dataset --version v1
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.run --data data/task12-smoke-v1.json --output runs/task12-v1-replay
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.report --input runs/task12-v1-replay
+```
+
+Повтор даст новые времена. Исходный v1 измерен кодом и окружением ниже; текущий
+run дополнительно включает конверсию адаптера в combined. Predictions и scores
+v1 подтверждены [независимым повтором](../insights/2026-11-02-task12-audit-fixes.md).
 
 - Коммит запуска: `8c62222f37ba6cec2aa00527e89d75a6183ddd2e`; dirty: `False`.
 - Данные: `task12-smoke-v1`; SHA-256: `613d64eb96a30886d1e2e62ba31ae654d1d4f092454e34b3aa263ff3435e0bab`.

@@ -4,15 +4,17 @@
 Публикация, push, создание PR, правки issues и Google-таблиц не выполнялись.
 Основная ветка upstream не изменялась. Результат готовится в `codex/12-detectors-api-research`.
 
-**Статус после повторного аудита:** основные артефакты есть, до сдачи требуется
-доработка. [Подтверждённые недоделки и порядок исправления](../insights/2026-11-02-task12-completion-audit.md).
+**Статус:** локальные исследовательские материалы готовы к ревью. Подтверждённые
+замечания аудита исправлены, установка и измерения повторены в чистом окружении.
+[Что исправлено и чем проверено](../insights/2026-11-02-task12-audit-fixes.md).
 
 ## Что читать
 
 1. [Сравнение аналогов и детекторов](../research/notes/task-12-comparison.md),
    [реестр первичных источников](../research/sources.md).
 2. [Критический разбор найденной статьи](../research/notes/task-12-paper.md).
-3. [CPU-эксперимент и ошибки](../experiments/2026-11-02-task12-gliner-cpu.md),
+3. [Актуальный CPU-эксперимент v2](../experiments/2026-11-02-task12-gliner-cpu-v2.md),
+   [таблица покрытия классов](../research/notes/task-12-class-coverage.md),
    [команды воспроизведения](../../benchmarks/pii_smoke/README.md),
    [инсайт](../insights/2026-11-02-task12-detector-boundary.md).
 4. [API v0.1](../api/session-pii-v0.1.md),
@@ -41,17 +43,21 @@ baseline, проверить другие веса на независимом �
 Из корня проекта, в установленном окружении:
 
 ```powershell
-.\.venv-research\Scripts\python.exe -m pip --isolated install --index-url https://pypi.org/simple -r tools/requirements-checks.txt
-.\.venv-research\Scripts\python.exe -m unittest discover -s tests -p 'test_pii_smoke.py'
-.\.venv-research\Scripts\python.exe tools/validate_task12.py
-.\.venv-research\Scripts\python.exe -m ruff check benchmarks/pii_smoke tools/validate_task12.py tests/test_pii_smoke.py
-.\.venv-research\Scripts\python.exe -m benchmarks.pii_smoke.report
+.\.venv-task12-locked\Scripts\python.exe -m pip check
+.\.venv-task12-locked\Scripts\python.exe -m unittest discover -s tests -p 'test*.py'
+.\.venv-task12-locked\Scripts\python.exe tools/validate_task12.py
+.\.venv-task12-locked\Scripts\python.exe -m ruff check benchmarks/pii_smoke tools/validate_task12.py tests
+.\.venv-task12-locked\Scripts\python.exe -m ruff format --check benchmarks/pii_smoke tools/validate_task12.py tests
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.report --input runs/task12-smoke-v2
 $env:PRE_COMMIT_HOME = Join-Path (Get-Location) '.cache-research\pre-commit'
-.\.venv-research\Scripts\python.exe -m pre_commit run --all-files
+.\.venv-task12-locked\Scripts\python.exe -m pre_commit run --all-files
 git diff --check
 ```
 
-JSON-проверки покрывают форму примеров и Unicode offsets; они не доказывают
+JSON-проверки покрывают форму, Unicode offsets, согласованность вердикта,
+людей, сигналов, продолжения/retry и reset; они не доказывают
 корректность будущей реализации порядка/TTL/транзакций. Тесты эксперимента
-проверяют checksum, точность сопоставления и отсутствие двойного TP.
+проверяют checksum, сопоставление, отсутствие двойного TP и дефекты отчётности.
+Проверены 12 unittest и 23 группы API-примеров. Исходные predictions/scores v1
+точно воспроизведены в новом окружении; новое покрытие ФИО измерено отдельно в v2.
 Итоговая сверка критериев и Git — в [плане](task-12-plan.md).
