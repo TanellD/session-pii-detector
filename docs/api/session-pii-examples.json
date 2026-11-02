@@ -1,0 +1,233 @@
+{
+  "status": "Иллюстративные ответы черновой политики, не результат запуска сервиса",
+  "pairs": [
+    {
+      "name": "single_unicode",
+      "request": {
+        "session_id": "s-single",
+        "message": {
+          "message_id": 1,
+          "role": "user",
+          "text": "🙂 Мой телефон +7 000 000-00-01."
+        }
+      },
+      "response": {
+        "session_id": "s-single",
+        "session_epoch": "epoch-single",
+        "state_version": 1,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 1,
+            "analysis_status": "analyzed",
+            "entities": [
+              {
+                "type": "PHONE",
+                "start": 14,
+                "end": 30,
+                "score": null,
+                "score_kind": "deterministic",
+                "detector": "regex-draft-v1",
+                "person_id": "p1"
+              }
+            ],
+            "message_verdict": {
+              "has_signals": true,
+              "decision": "no_alert"
+            },
+            "session_verdict": {
+              "decision": "no_alert",
+              "first_violation_message_id": null,
+              "coverage_complete": true,
+              "reason": null,
+              "persons": [
+                {
+                  "person_id": "p1",
+                  "decision": "no_alert",
+                  "rule": null,
+                  "risk_score": null,
+                  "markers": [
+                    {
+                      "message_id": 1,
+                      "type": "PHONE",
+                      "start": 14,
+                      "end": 30
+                    }
+                  ],
+                  "special_category": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "batch_two_orange",
+      "request": {
+        "session_id": "s-batch",
+        "messages": [
+          {
+            "message_id": 1,
+            "role": "user",
+            "text": "Мой телефон +7 000 000-00-01."
+          },
+          {
+            "message_id": 2,
+            "role": "user",
+            "text": "Моя почта lada@example.com."
+          }
+        ]
+      },
+      "response": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "state_version": 2,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 1,
+            "analysis_status": "analyzed",
+            "entities": [
+              {
+                "type": "PHONE",
+                "start": 12,
+                "end": 28,
+                "score": null,
+                "score_kind": "deterministic",
+                "detector": "regex-draft-v1",
+                "person_id": "p1"
+              }
+            ],
+            "message_verdict": {
+              "has_signals": true,
+              "decision": "no_alert"
+            },
+            "session_verdict": {
+              "decision": "no_alert",
+              "first_violation_message_id": null,
+              "coverage_complete": true,
+              "reason": null,
+              "persons": [
+                {
+                  "person_id": "p1",
+                  "decision": "no_alert",
+                  "rule": null,
+                  "risk_score": null,
+                  "markers": [
+                    {
+                      "message_id": 1,
+                      "type": "PHONE",
+                      "start": 12,
+                      "end": 28
+                    }
+                  ],
+                  "special_category": false
+                }
+              ]
+            }
+          },
+          {
+            "message_id": 2,
+            "analysis_status": "analyzed",
+            "entities": [
+              {
+                "type": "EMAIL",
+                "start": 10,
+                "end": 26,
+                "score": null,
+                "score_kind": "deterministic",
+                "detector": "regex-draft-v1",
+                "person_id": "p1"
+              }
+            ],
+            "message_verdict": {
+              "has_signals": true,
+              "decision": "no_alert"
+            },
+            "session_verdict": {
+              "decision": "alert",
+              "first_violation_message_id": 2,
+              "coverage_complete": true,
+              "reason": null,
+              "persons": [
+                {
+                  "person_id": "p1",
+                  "decision": "alert",
+                  "rule": "two_orange",
+                  "risk_score": null,
+                  "markers": [
+                    {
+                      "message_id": 1,
+                      "type": "PHONE",
+                      "start": 12,
+                      "end": 28
+                    },
+                    {
+                      "message_id": 2,
+                      "type": "EMAIL",
+                      "start": 10,
+                      "end": 26
+                    }
+                  ],
+                  "special_category": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "tool_not_in_scope",
+      "request": {
+        "session_id": "s-tool",
+        "message": {
+          "message_id": 1,
+          "role": "tool",
+          "text": "Тестовый вывод инструмента."
+        }
+      },
+      "response": {
+        "session_id": "s-tool",
+        "session_epoch": "epoch-tool",
+        "state_version": 1,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 1,
+            "analysis_status": "not_in_scope",
+            "entities": [],
+            "message_verdict": {
+              "has_signals": false,
+              "decision": "unknown"
+            },
+            "session_verdict": {
+              "decision": "unknown",
+              "first_violation_message_id": null,
+              "coverage_complete": false,
+              "reason": "role_tool_not_supported",
+              "persons": []
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "http_status": 409,
+      "response": {
+        "code": "OUT_OF_ORDER",
+        "message": "Ожидалось следующее сообщение сессии; состояние не изменено."
+      }
+    },
+    {
+      "http_status": 410,
+      "response": {
+        "code": "SESSION_EXPIRED",
+        "message": "Состояние epoch удалено; начните новую сессию явно."
+      }
+    }
+  ]
+}
