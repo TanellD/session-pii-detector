@@ -18,6 +18,8 @@ wandb/
 !.env.example
 .venv/
 .venv-research/
+.venv-task12-clean/
+.venv-task12-locked/
 .cache-research/
 __pycache__/
 *.pyc

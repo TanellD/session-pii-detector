@@ -1,138 +1,166 @@
-"""Render measured aggregates and synthetic error cases, without copying raw data."""
+"""Render only verified facts from a run; manual interpretation lives separately."""
 
 import argparse
 import json
 from pathlib import Path
 
-from .evaluate import aggregate
+from .evaluate import aggregate, counts, latency_summary
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=Path, default=Path("runs/task12-smoke"))
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=Path("docs/experiments/2026-11-02-task12-gliner-cpu.md"),
-    )
-    args = parser.parse_args()
-    summary = json.loads((args.input / "summary.json").read_text(encoding="utf-8"))
-    meta = summary["metadata"]
+def load_verified(directory):
+    summary = json.loads((directory / "summary.json").read_text(encoding="utf-8"))
+    if not summary["modes"]:
+        raise ValueError("No measured modes")
+    rows_by_mode = {}
+    canonical = None
     for mode, metrics in summary["modes"].items():
-        rows = json.loads((args.input / f"{mode}.json").read_text(encoding="utf-8"))
+        if mode not in {"regex", "gliner", "combined"}:
+            raise ValueError(f"Unknown mode: {mode}")
+        rows = json.loads((directory / f"{mode}.json").read_text(encoding="utf-8"))
+        if len(rows) != summary["case_count"] or not rows:
+            raise ValueError(f"Case count mismatch: {mode}")
+        if len({row["id"] for row in rows}) != len(rows):
+            raise ValueError(f"Duplicate case IDs: {mode}")
+        for row in rows:
+            if len(row["latency_ms"]) != summary["metadata"]["config"]["repeats"]:
+                raise ValueError(f"Repeat count mismatch: {mode}/{row['id']}")
+            for entity in row["expected"] + row["predicted"]:
+                if not 0 <= entity["start"] < entity["end"] <= len(row["text"]):
+                    raise ValueError(f"Invalid span: {mode}/{row['id']}")
+        fixture = [
+            {key: row[key] for key in ("id", "text", "expected")} for row in rows
+        ]
+        if canonical is not None and fixture != canonical:
+            raise ValueError("Modes contain different fixtures")
+        canonical = fixture
         if (
             aggregate(rows) != metrics["exact"]
             or aggregate(rows, True) != metrics["overlap"]
+            or latency_summary(rows) != metrics["latency_ms"]
         ):
-            raise ValueError(f"Stored counts disagree with raw predictions: {mode}")
+            raise ValueError(
+                f"Stored metrics disagree with raw predictions/timings: {mode}"
+            )
+        rows_by_mode[mode] = rows
+    return summary, rows_by_mode
+
+
+def render(summary, rows_by_mode):
+    meta = summary["metadata"]
     lines = [
-        "# Эксперимент #12: regex + GLiNER на русском, CPU",
+        "# Автоматический отчёт CPU smoke-проверки #12",
         "",
-        "Дата: 02.11.2026. Автор: `Kopylov-Andrey`. Issue: #12. Статус: выполнен локально.",
+        f"Дата запуска (UTC): `{meta.get('started_at_utc', 'не записана в старом формате')}`.",
+        "Автор: `Kopylov-Andrey`. Измерение извлечения сущностей; HTTP-сервис не запускался.",
         "",
-        "Гипотеза: форматные правила дополняют zero-shot NER; новые семантические классы требуют проверки.",
+        "## Протокол",
         "",
-        "## Воспроизведение",
-        "",
-        "[Команды и ограничения](../../benchmarks/pii_smoke/README.md). Из корня репо:",
-        "",
-        "```powershell",
-        ".\\.venv-research\\Scripts\\python.exe -m benchmarks.pii_smoke.dataset",
-        ".\\.venv-research\\Scripts\\python.exe -m benchmarks.pii_smoke.run",
-        ".\\.venv-research\\Scripts\\python.exe -m benchmarks.pii_smoke.report",
-        "```",
-        "",
-        "Перед run подготовить кеш и включить offline, как в README.",
-        "",
-        f"- Коммит запуска: `{meta['commit']}`; dirty: `{meta['worktree_dirty']}`.",
-        f"- Данные: `task12-smoke-v1`; SHA-256: `{meta['dataset_sha256']}`.",
-        f"- Конфиг SHA-256 (байты исходного файла): `{meta['config_sha256']}`.",
-        f"- Модель: `{meta['config']['model']}` @ `{meta['config']['revision']}`.",
-        f"- Backbone: `{meta['config']['backbone']}` @ `{meta['config']['backbone_revision']}`.",
+        f"- Коммит: `{meta['commit']}`; dirty: `{meta['worktree_dirty']}`.",
+        f"- Набор: `{meta.get('dataset_version', 'не записан в старом формате')}`; фраз: {summary['case_count']}.",
+        f"- Dataset SHA-256: `{meta['dataset_sha256']}`.",
+        f"- Config SHA-256: `{meta['config_sha256']}`.",
         f"- Python: `{meta['python']}`; платформа: `{meta['platform']}`.",
-        f"- CPU: {meta['logical_cpus']} логических потоков; точная модель CPU не записана платформой.",
-        f"- RAM: {meta['ram_gib']:.2f} GiB; свободно в начале {meta['available_ram_gib_at_start']:.2f} GiB.",
-        f"- Device: CPU, torch threads={meta['config']['threads']}; batch=1; порог={meta['config']['threshold']}.",
+        f"- CPU: `{meta['processor'] or 'модель не записана'}`; логических потоков: {meta['logical_cpus']}.",
+        f"- RAM: {meta['ram_gib']:.2f} GiB; свободно в начале: {meta['available_ram_gib_at_start']:.2f} GiB.",
+        f"- Device: `{meta['device']}`; повторы: {meta['config']['repeats']}; batch=1.",
         "- Пакеты: "
-        + ", ".join(f"`{k}=={v}`" for k, v in meta["packages"].items())
+        + ", ".join(f"`{key}=={value}`" for key, value in meta["packages"].items())
         + ".",
-        f"- Загрузка: {meta['model_load_seconds']:.3f} s; прогрев: {meta['warmup_seconds']:.3f} s (отдельно от латенси).",
+    ]
+    if "model_load_seconds" in meta:
+        lines += [
+            f"- Модель: `{meta['config']['model']}` @ `{meta['config']['revision']}`.",
+            f"- Backbone: `{meta['config']['backbone']}` @ `{meta['config']['backbone_revision']}`.",
+            f"- Torch threads: {meta['config']['threads']}; threshold: {meta['config']['threshold']}.",
+            f"- Загрузка: {meta['model_load_seconds']:.3f} s; прогрев: {meta['warmup_seconds']:.3f} s, вне латенси.",
+        ]
+    if "environment_lock_sha256" in meta:
+        lines.append(f"- Lock SHA-256: `{meta['environment_lock_sha256']}`.")
+    lines += [
         "",
         "## Результаты",
         "",
-        "Все числа ниже получены report из summary и повторно сверены с сырыми предсказаниями.",
+        "Числа пересчитаны из сырых predictions и latency_ms; p95 — nearest-rank по всем повторам.",
         "",
-        "| Режим | TP / FP / FN, точные границы | TP / FP / FN, пересечение | CPU median, ms | CPU p95, ms |",
-        "|---|---|---|---|---|",
+        "| Режим | TP / FP / FN, точные границы | TP / FP / FN, пересечение | Median, ms | p95, ms | Измерений |",
+        "|---|---|---|---|---|---|",
     ]
     for mode, metrics in summary["modes"].items():
-        exact, overlap = metrics["exact"]["total"], metrics["overlap"]["total"]
 
-        def triple(c):
-            return f"{c['tp']} / {c['fp']} / {c['fn']}"
+        def triple(value):
+            return f"{value['tp']} / {value['fp']} / {value['fn']}"
 
+        timing = metrics["latency_ms"]
         lines.append(
-            f"| {mode} | {triple(exact)} | {triple(overlap)} | {metrics['latency_ms']['median']:.3f} | {metrics['latency_ms']['p95']:.3f} |"
+            f"| {mode} | {triple(metrics['exact']['total'])} | {triple(metrics['overlap']['total'])} | "
+            f"{timing['median']:.3f} | {timing['p95']:.3f} | {timing['samples']} |"
         )
+    selected = "combined" if "combined" in rows_by_mode else next(iter(rows_by_mode))
     lines += [
         "",
-        f"Фразы: {summary['case_count']}. Измерения на режим: {summary['modes']['combined']['latency_ms']['samples']} повторов, а не столько независимых фраз.",
-        "",
-        "### По типам, combined, точные границы",
+        f"## По типам: {selected}, точные границы",
         "",
         "| Тип | TP | FP | FN |",
         "|---|---|---|---|",
     ]
-    for kind, c in summary["modes"]["combined"]["exact"]["by_type"].items():
+    for kind, c in summary["modes"][selected]["exact"]["by_type"].items():
         lines.append(f"| {kind} | {c['tp']} | {c['fp']} | {c['fn']} |")
     lines += [
         "",
-        "## Анализ ошибок",
+        f"## Проверенные случаи: {selected}",
         "",
-        "Синтетические примеры; строки воспроизводятся тем же report.",
-        "",
+        "| ID | TP | FP | FN |",
+        "|---|---|---|---|",
     ]
-    rows = json.loads((args.input / "combined.json").read_text(encoding="utf-8"))
-    for row in rows:
-        if row["id"] in {
-            "first_name",
-            "occupation",
-            "relationship",
-            "inn",
-            "intimacy",
-            "organization",
-        }:
-            gold = "; ".join(
-                f"{e['type']}: {row['text'][e['start'] : e['end']]}"
-                for e in row["expected"]
-            )
-            pred = (
+    for row in rows_by_mode[selected]:
+        c = counts(row["expected"], row["predicted"])
+        lines.append(f"| {row['id']} | {c['tp']} | {c['fp']} | {c['fn']} |")
+    errors = [
+        row
+        for row in rows_by_mode[selected]
+        if any(counts(row["expected"], row["predicted"])[key] for key in ("fp", "fn"))
+    ]
+    lines += ["", "## Расхождения на синтетических фразах", ""]
+    if not errors:
+        lines.append("Расхождений по точному типу и границам в этом прогоне нет.")
+    for row in errors:
+
+        def spans(entities):
+            return (
                 "; ".join(
                     f"{e['type']}: {row['text'][e['start'] : e['end']]}"
-                    for e in row["predicted"]
+                    for e in entities
                 )
-                or "ничего"
+                or "нет"
             )
-            lines += [
-                f"- `{row['id']}` — {row['text']}",
-                f"  Ожидалось: {gold}. Получено: {pred}.",
-            ]
+
+        lines += [
+            f"- `{row['id']}`: {row['text']}",
+            f"  Gold: {spans(row['expected'])}. Predictions: {spans(row['predicted'])}.",
+        ]
     lines += [
         "",
-        "## Вывод и следующий шаг",
+        "## Границы измерения",
         "",
-        "В этом наборе правила улучшают покрытие форматов. Базовый GLiNER не готов как универсальный русский детектор: должность и родство не извлечены нужными типами, есть смешение PHONE/INN и ложные PERSON. Нужны адаптер, правила разрешения конфликтов и сравнение с другими весами на независимом наборе.",
-        "",
-        "Это не оценка сессионного F2. Gold, метки и порог не менялись после просмотра результата. Набор мал, с искусственными именами и номерами; выводы не переносятся на реальные частоты или production. Любое пересечение — мягкий диагностический критерий, не достаточное качество границ.",
-        "",
-        "Латенси относится к коротким текстам, не включает сеть/API и конверсию объектов адаптером. Не проверены параллельные сессии, длинные сообщения, рост состояния и пригодность порога. ~200 ms из ответа ментора относятся к другому железу и другому сервису.",
-        "",
-        "При загрузке были предупреждения Transformers о byte fallback / regex токенизатора и отсутствии max_length. Протокол не изменялся; отдельно проверить fast/slow tokenizer и длинные тексты на следующем этапе. Предупреждение само по себе не доказывает причину ошибок.",
+        "Это не сессионный F2. PERSON объединяет ФИО и части; классификация частей, линковка людей и истинность фактов не оценивались.",
+        "Набор мал и синтетический, частоты не репрезентативны. Повторы не являются независимыми фразами; любое пересечение — мягкая диагностика границ.",
+        "Латенси коротких текстов не включает HTTP, сеть, нагрузку и хранение состояния. Протокол combined указан в README и metadata; старый v1 исключал конверсию адаптера.",
+        "Ручные выводы относятся к указанному run и оформляются отдельно. Изменение числа ошибок само по себе не устанавливает их причину.",
         "",
     ]
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text("\n".join(lines), encoding="utf-8")
-    print(args.output)
+    return "\n".join(lines)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", type=Path, default=Path("runs/task12-smoke-v2"))
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
+    output = args.output or args.input / "report.md"
+    summary, rows = load_verified(args.input)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(render(summary, rows), encoding="utf-8")
+    print(output)
 
 
 if __name__ == "__main__":

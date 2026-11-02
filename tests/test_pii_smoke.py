@@ -1,6 +1,8 @@
 """Checks for diagnostic arithmetic, generated fixtures and result accounting."""
 
 import copy
+import hashlib
+import json
 import unittest
 
 from benchmarks.pii_smoke.dataset import build
@@ -15,6 +17,23 @@ from benchmarks.pii_smoke.regex_detector import (
 
 
 class SmokeChecks(unittest.TestCase):
+    def test_versioned_name_coverage_and_original_fixture(self):
+        v2 = {row["id"]: row for row in build()}
+        self.assertEqual(len(v2["full_name"]["text"].split()[2:]), 3)
+        self.assertIn("patronymic", v2)
+        original = (
+            json.dumps(
+                {"version": "task12-smoke-v1", "synthetic": True, "cases": build("v1")},
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n"
+        ).encode("utf-8")
+        self.assertEqual(
+            hashlib.sha256(original).hexdigest(),
+            "613d64eb96a30886d1e2e62ba31ae654d1d4f092454e34b3aa263ff3435e0bab",
+        )
+
     def test_fixture_spans_and_rules(self):
         rows = build()
         self.assertEqual(len(rows), 30)

@@ -8,7 +8,9 @@ from pathlib import Path
 from .regex_detector import valid_inn, valid_luhn, valid_snils
 
 
-def build():
+def build(version="v2"):
+    if version not in {"v1", "v2"}:
+        raise ValueError("Unknown dataset version")
     snils_base = "000000123"
     snils = next(
         snils_base + f"{n:02d}"
@@ -96,6 +98,18 @@ def build():
         ),
         ("negative", "Покажи прогноз погоды на завтра.", []),
     ]
+    if version == "v2":
+        # Do not rewrite the already measured v1 fixture.
+        examples[0] = (
+            "full_name",
+            "Меня зовут Лада Олеговна Макетова.",
+            [("PERSON", "Лада Олеговна Макетова")],
+        )
+        examples[25] = (
+            "patronymic",
+            "Моё отчество Олеговна.",
+            [("PERSON", "Олеговна")],
+        )
     rows = []
     for case_id, text, annotations in examples:
         expected = [
@@ -112,23 +126,30 @@ def build():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--output", type=Path, default=Path("data/task12-smoke-v1.json")
-    )
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--version", choices=["v1", "v2"], default="v2")
     args = parser.parse_args()
+    output = args.output or Path(f"data/task12-smoke-{args.version}.json")
     content = (
         json.dumps(
-            {"version": "task12-smoke-v1", "synthetic": True, "cases": build()},
+            {
+                "version": f"task12-smoke-{args.version}",
+                "synthetic": True,
+                "cases": build(args.version),
+            },
             ensure_ascii=False,
             indent=2,
         )
         + "\n"
     ).encode("utf-8")
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_bytes(content)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_bytes(content)
     print(
         json.dumps(
-            {"cases": len(build()), "sha256": hashlib.sha256(content).hexdigest()},
+            {
+                "cases": len(build(args.version)),
+                "sha256": hashlib.sha256(content).hexdigest(),
+            },
             indent=2,
         )
     )

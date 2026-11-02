@@ -1,6 +1,19 @@
 """Extraction diagnostics only, not the project's still-undefined session metrics."""
 
 from collections import Counter
+import math
+import statistics
+
+
+def latency_summary(rows):
+    values = [value for row in rows for value in row["latency_ms"]]
+    if not values or any(not math.isfinite(value) or value < 0 for value in values):
+        raise ValueError("Expected finite, nonnegative latency samples")
+    return {
+        "samples": len(values),
+        "median": statistics.median(values),
+        "p95": sorted(values)[math.ceil(0.95 * len(values)) - 1],
+    }
 
 
 def counts(gold, predicted, overlap=False):

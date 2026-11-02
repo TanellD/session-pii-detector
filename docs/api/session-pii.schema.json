@@ -4,108 +4,499 @@
   "title": "Session PII draft contract, not an implemented API",
   "$defs": {
     "Message": {
-      "type": "object", "additionalProperties": false,
-      "required": ["message_id", "role", "text"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message_id",
+        "role",
+        "text"
+      ],
       "properties": {
-        "message_id": {"type": "integer", "minimum": 1},
-        "role": {"enum": ["user", "assistant", "tool"]},
-        "text": {"type": "string", "minLength": 1, "maxLength": 10000},
-        "previous_assistant_message": {"type": "string", "maxLength": 10000}
+        "message_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant",
+            "tool"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 10000
+        },
+        "previous_assistant_message": {
+          "type": "string",
+          "maxLength": 10000
+        }
       }
     },
     "Request": {
-      "type": "object", "additionalProperties": false,
-      "required": ["session_id"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "session_id",
+        "session_epoch",
+        "expected_state_version"
+      ],
       "properties": {
-        "session_id": {"type": "string", "minLength": 1, "maxLength": 128},
-        "session_epoch": {"type": "string", "minLength": 1},
-        "expected_state_version": {"type": "integer", "minimum": 0},
-        "message": {"$ref": "#/$defs/Message"},
-        "messages": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"$ref": "#/$defs/Message"}}
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "session_epoch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_state_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "message": {
+          "$ref": "#/$defs/Message"
+        },
+        "messages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/Message"
+          }
+        }
       },
-      "oneOf": [{"required": ["message"], "not": {"required": ["messages"]}}, {"required": ["messages"], "not": {"required": ["message"]}}],
-      "dependentRequired": {"session_epoch": ["expected_state_version"], "expected_state_version": ["session_epoch"]}
-    },
-    "EntityType": {"enum": ["PERSON", "FIRST_NAME", "LAST_NAME", "FULL_NAME", "PHONE", "EMAIL", "ADDRESS", "DATE_OF_BIRTH", "AGE", "CITY", "ORGANIZATION", "OCCUPATION", "RELATIONSHIP", "GENDER", "SPECIAL_CATEGORY", "SNILS", "INN", "CARD", "PASSPORT"]},
-    "Entity": {
-      "type": "object", "additionalProperties": false,
-      "required": ["type", "start", "end", "score", "score_kind", "detector", "person_id"],
-      "properties": {
-        "type": {"$ref": "#/$defs/EntityType"},
-        "start": {"type": "integer", "minimum": 0},
-        "end": {"type": "integer", "minimum": 1},
-        "score": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
-        "score_kind": {"enum": ["model_score", "deterministic"]},
-        "detector": {"type": "string", "minLength": 1},
-        "person_id": {"type": ["string", "null"]}
+      "oneOf": [
+        {
+          "required": [
+            "message"
+          ],
+          "not": {
+            "required": [
+              "messages"
+            ]
+          }
+        },
+        {
+          "required": [
+            "messages"
+          ],
+          "not": {
+            "required": [
+              "message"
+            ]
+          }
+        }
+      ],
+      "dependentRequired": {
+        "session_epoch": [
+          "expected_state_version"
+        ],
+        "expected_state_version": [
+          "session_epoch"
+        ]
       }
     },
-    "Decision": {"enum": ["no_alert", "warning", "alert", "unknown"]},
-    "Marker": {
-      "type": "object", "additionalProperties": false,
-      "required": ["message_id", "type", "start", "end"],
+    "EntityType": {
+      "enum": [
+        "PERSON",
+        "FIRST_NAME",
+        "LAST_NAME",
+        "FULL_NAME",
+        "PATRONYMIC",
+        "PHONE",
+        "EMAIL",
+        "ADDRESS",
+        "DATE_OF_BIRTH",
+        "AGE",
+        "CITY",
+        "ORGANIZATION",
+        "OCCUPATION",
+        "RELATIONSHIP",
+        "GENDER",
+        "SPECIAL_CATEGORY",
+        "SNILS",
+        "INN",
+        "CARD",
+        "PASSPORT"
+      ]
+    },
+    "Entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "start",
+        "end",
+        "score",
+        "score_kind",
+        "detector",
+        "person_id"
+      ],
       "properties": {
-        "message_id": {"type": "integer", "minimum": 1},
-        "type": {"$ref": "#/$defs/EntityType"},
-        "start": {"type": "integer", "minimum": 0},
-        "end": {"type": "integer", "minimum": 1}
+        "type": {
+          "$ref": "#/$defs/EntityType"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "score_kind": {
+          "enum": [
+            "model_score",
+            "deterministic"
+          ]
+        },
+        "detector": {
+          "type": "string",
+          "minLength": 1
+        },
+        "person_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Decision": {
+      "enum": [
+        "no_alert",
+        "warning",
+        "alert",
+        "unknown"
+      ]
+    },
+    "Marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message_id",
+        "type",
+        "start",
+        "end"
+      ],
+      "properties": {
+        "message_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "type": {
+          "$ref": "#/$defs/EntityType"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "Person": {
-      "type": "object", "additionalProperties": false,
-      "required": ["person_id", "decision", "rule", "risk_score", "markers", "special_category"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "person_id",
+        "decision",
+        "rule",
+        "risk_score",
+        "markers",
+        "special_category"
+      ],
       "properties": {
-        "person_id": {"type": "string", "minLength": 1},
-        "decision": {"$ref": "#/$defs/Decision"},
-        "rule": {"enum": [null, "red_marker", "two_orange", "score"]},
-        "risk_score": {"type": ["number", "null"], "minimum": 0},
-        "markers": {"type": "array", "items": {"$ref": "#/$defs/Marker"}},
-        "special_category": {"type": "boolean"}
+        "person_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision": {
+          "$ref": "#/$defs/Decision"
+        },
+        "rule": {
+          "enum": [
+            null,
+            "red_marker",
+            "two_orange",
+            "score"
+          ]
+        },
+        "risk_score": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "markers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Marker"
+          }
+        },
+        "special_category": {
+          "type": "boolean"
+        }
       }
     },
     "SessionVerdict": {
-      "type": "object", "additionalProperties": false,
-      "required": ["decision", "first_violation_message_id", "coverage_complete", "reason", "persons"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decision",
+        "first_violation_message_id",
+        "coverage_complete",
+        "reason",
+        "persons"
+      ],
       "properties": {
-        "decision": {"$ref": "#/$defs/Decision"},
-        "first_violation_message_id": {"type": ["integer", "null"], "minimum": 1},
-        "coverage_complete": {"type": "boolean"},
-        "reason": {"type": ["string", "null"]},
-        "persons": {"type": "array", "items": {"$ref": "#/$defs/Person"}}
+        "decision": {
+          "$ref": "#/$defs/Decision"
+        },
+        "first_violation_message_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "coverage_complete": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "persons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Person"
+          }
+        }
       }
     },
     "MessageResult": {
-      "type": "object", "additionalProperties": false,
-      "required": ["message_id", "analysis_status", "entities", "message_verdict", "session_verdict"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message_id",
+        "analysis_status",
+        "entities",
+        "message_verdict",
+        "session_verdict"
+      ],
       "properties": {
-        "message_id": {"type": "integer", "minimum": 1},
-        "analysis_status": {"enum": ["analyzed", "not_in_scope"]},
-        "entities": {"type": "array", "items": {"$ref": "#/$defs/Entity"}},
-        "message_verdict": {
-          "type": "object", "additionalProperties": false,
-          "required": ["has_signals", "decision"],
-          "properties": {"has_signals": {"type": "boolean"}, "decision": {"$ref": "#/$defs/Decision"}}
+        "message_id": {
+          "type": "integer",
+          "minimum": 1
         },
-        "session_verdict": {"$ref": "#/$defs/SessionVerdict"}
+        "analysis_status": {
+          "enum": [
+            "analyzed",
+            "not_in_scope"
+          ]
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Entity"
+          }
+        },
+        "message_verdict": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "has_signals",
+            "decision"
+          ],
+          "properties": {
+            "has_signals": {
+              "type": "boolean"
+            },
+            "decision": {
+              "$ref": "#/$defs/Decision"
+            }
+          }
+        },
+        "session_verdict": {
+          "$ref": "#/$defs/SessionVerdict"
+        }
       }
     },
     "Response": {
-      "type": "object", "additionalProperties": false,
-      "required": ["session_id", "session_epoch", "state_version", "policy_version", "results"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "session_id",
+        "session_epoch",
+        "state_version",
+        "policy_version",
+        "results"
+      ],
       "properties": {
-        "session_id": {"type": "string", "minLength": 1},
-        "session_epoch": {"type": "string", "minLength": 1},
-        "state_version": {"type": "integer", "minimum": 1},
-        "policy_version": {"type": "string", "minLength": 1},
-        "results": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/MessageResult"}}
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "session_epoch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "policy_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "results": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/MessageResult"
+          }
+        }
       }
     },
     "Error": {
-      "type": "object", "additionalProperties": false,
-      "required": ["code", "message"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message",
+        "state"
+      ],
       "properties": {
-        "code": {"enum": ["INVALID_REQUEST", "OUT_OF_ORDER", "MESSAGE_CONFLICT", "STATE_CONFLICT", "SESSION_EXPIRED", "DETECTOR_UNAVAILABLE"]},
-        "message": {"type": "string", "minLength": 1}
+        "code": {
+          "enum": [
+            "INVALID_REQUEST",
+            "OUT_OF_ORDER",
+            "MESSAGE_CONFLICT",
+            "STATE_CONFLICT",
+            "SESSION_EXPIRED",
+            "DETECTOR_UNAVAILABLE",
+            "SESSION_NOT_FOUND"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/SessionSnapshot"
+            }
+          ]
+        }
+      }
+    },
+    "SessionSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "session_id",
+        "session_epoch",
+        "state_version",
+        "next_message_id",
+        "policy_version",
+        "decision",
+        "first_violation_message_id",
+        "coverage_complete",
+        "reason"
+      ],
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "session_epoch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state_version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "next_message_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "policy_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision": {
+          "$ref": "#/$defs/Decision"
+        },
+        "first_violation_message_id": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "coverage_complete": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "CreateRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "session_id"
+      ],
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "ResetRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "session_epoch",
+        "expected_state_version"
+      ],
+      "properties": {
+        "session_epoch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_state_version": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     }
   }

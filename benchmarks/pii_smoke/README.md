@@ -1,58 +1,86 @@
 # Проверка regex + GLiNER для #12
 
 Диагностика извлечения сущностей, не реализация сессионного сервиса и не замер
-проектного F2. Конфиг и ожидания фиксируются до первого прогона модели.
-Порог не подбирается по этим примерам. Другие детекторы здесь не измеряются.
+проектного F2. Метки, порог и gold фиксируются до запуска модели. Порог не
+подбирается по этим примерам. Другие детекторы здесь не измеряются.
 
 ## Воспроизведение в PowerShell из корня репозитория
 
-На исходной машине Python 3.13 и PyTorch уже установлены. Окружение использует
-системный PyTorch, но добавленные библиотеки устанавливаются только в него.
-На чистой машине сначала нужен PyTorch с поддержкой CPU; точные версии окружения
-сохраняются в `runs/task12-smoke/freeze.txt` и описании эксперимента.
+Проверяемая платформа: Windows x64, CPython 3.13.0. Полный снимок зависимостей,
+включая CPU PyTorch, pip, TLS-библиотеку и транзитивные пакеты:
+`requirements-win-py313.lock.txt`. Он рассчитан на эту платформу; для Linux/другого
+Python нужен отдельный проверенный lock. Системные Python-пакеты не наследуются.
 
 ```powershell
-py -3.13 -m venv --system-site-packages --without-pip .venv-research
-.\.venv-research\Scripts\python.exe -m pip --isolated install --index-url https://pypi.org/simple -r benchmarks/pii_smoke/requirements.txt
+py -3.13 -m venv .venv-task12-locked
+.\.venv-task12-locked\Scripts\python.exe -m pip --isolated install --index-url https://pypi.org/simple -r benchmarks/pii_smoke/requirements-win-py313.lock.txt
+.\.venv-task12-locked\Scripts\python.exe -m pip check
+$env:PYTHONUTF8 = '1'
 $env:HF_HOME = Join-Path (Get-Location) '.cache-research\huggingface'
 $env:HF_HUB_DISABLE_XET = '1'
 Remove-Item Env:HF_HUB_OFFLINE -ErrorAction SilentlyContinue
 Remove-Item Env:TRANSFORMERS_OFFLINE -ErrorAction SilentlyContinue
-.\.venv-research\Scripts\python.exe -m benchmarks.pii_smoke.prepare
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.prepare
 $env:HF_HUB_OFFLINE = '1'
 $env:TRANSFORMERS_OFFLINE = '1'
-.\.venv-research\Scripts\python.exe -m benchmarks.pii_smoke.dataset
-.\.venv-research\Scripts\python.exe -m unittest discover -s tests -p 'test_pii_smoke.py'
-.\.venv-research\Scripts\python.exe -m benchmarks.pii_smoke.run
-.\.venv-research\Scripts\python.exe -m pip freeze | Set-Content -Encoding utf8 runs/task12-smoke/freeze.txt
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.dataset --version v2
+.\.venv-task12-locked\Scripts\python.exe -m unittest discover -s tests -p 'test*.py'
+.\.venv-task12-locked\Scripts\python.exe tools/validate_task12.py
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.run --output runs/task12-smoke-v2
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.report --input runs/task12-smoke-v2
 ```
 
-Для отдельной проверки правил: тот же `run` с `--regex-only --output runs/task12-regex`.
-Подготовка скачивает публичные веса. Прогон работает offline, только на CPU.
-В Windows `prepare` использует доверенное хранилище сертификатов через pip;
-TLS-проверка не отключается. Окружение должно содержать pip (доступен системный).
+Повтору дать новый `--output`, например `runs/task12-smoke-v2-replay`: измеренные
+summary не перезаписываются. Для regex достаточно `psutil` из requirements;
+модель и HF-кеш не нужны. Полный lock удобен для общей проверки:
+
+```powershell
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.run --regex-only --output runs/task12-regex-v2
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.report --input runs/task12-regex-v2
+```
+
+Подготовка скачивает только публичные веса/конфиги. Model и backbone загружаются
+по двум SHA из config, без lookup `main`. В игнорируемом
+`outputs/task12-prepared-model/` создаются локальные веса, backbone и manifest
+с SHA-256. Меняется только локальная копия gliner_config: путь backbone становится
+локальным. HF-кеш не правится. После переноса папки нужно повторить prepare.
+В Windows используется публичный `truststore` и доверенное хранилище ОС;
+проверка TLS остаётся включённой. Тексты не передаются во внешние сервисы.
+
+Run проверяет manifest/хеши и загружает модель с `strict=True`, только с CPU.
+Он работает и с пустым HF_HOME при offline, поскольку все артефакты локальны.
+В summary фиксируются время, CPU, версии, hashes, commit и dirty; `freeze.txt`
+сохраняется автоматически. Сырые фразы/предсказания и модель не добавляются в git.
+Report сверяет числа качества, латенси, повторы и состав набора с raw-файлами.
+Ручная интерпретация конкретного run отделена от автоматического отчёта.
 
 ## Набор и ограничения
 
-Генератор создаёт синтетические фразы и gold spans в игнорируемом `data/`.
-Имена и организации вымышлены, email — `example.com`, телефон — с невыделенным
-кодом `000`; номера документов и карты — диагностические последовательности
-с нулевыми префиксами. Контрольная сумма не подтверждает выдачу номера.
-Паспорт проверяется только по контексту и форме; универсальной контрольной суммы
-в этом прототипе нет. ИНН рассматривается только физлица, длина 12 цифр.
+Генератор создаёт 30 синтетических фраз с gold spans в игнорируемом `data/`.
+`v2` добавляет трёхкомпонентное ФИО и отдельное отчество вместо прежнего
+двухкомпонентного имени и одного негативного числового случая. `--version v1`
+точно восстанавливает исходный набор; его прежний SHA проверяется тестом.
+Это расширение проверки покрытия после аудита, а не независимый test-set.
+Порог и labels v1/v2 одинаковы. Результаты версий нельзя считать улучшением модели.
 
-`PERSON` объединяет полное имя и части. Их разделение — отдельный адаптер,
-проверка не доказывает готовность всех классов MVP. SPECIAL_CATEGORY — извлечение
-сигнала, не вывод о наличии ПДн или правонарушении. Отрицания извлекаются как
-упоминания, истинность фактов и принадлежность человеку здесь не оцениваются.
+Имена и организации вымышлены, email — example.com, телефон — код 000.
+Номера документов/карты — диагностические последовательности с нулевыми префиксами.
+Checksum не подтверждает выдачу номера. Паспорт проверяется по контексту и форме;
+ИНН рассматривается только физлица, длина 12 цифр.
 
-Считаем TP/FP/FN по типу и точным границам, дополнительно — любое пересечение
-при совпадающем типе. Второй критерий более мягкий и показывается отдельно.
-Сопоставление взаимно однозначное. Тексты короткие и подобраны вручную;
-частотность классов не репрезентативна. Сессионный F2 и задержка в сообщениях
-не считаются. Равенство прогонов не гарантируется на другом железе.
+PERSON объединяет полное имя и части: разделение классов — отдельный адаптер,
+здесь он не реализован. [Таблица покрытия классов](../../docs/research/notes/task-12-class-coverage.md)
+показывает, какие примеры и типы реально проверены. SPECIAL_CATEGORY означает
+упоминание сигнала, не юридический вывод. Отрицания извлекаются как упоминания;
+истинность фактов, отзывы и принадлежность человеку здесь не оцениваются.
 
-Латенси — повторы после прогрева, batch size 1, CPU, число потоков из конфига.
-Медиана и p95 nearest-rank считаются по всем повторам; загрузка и прогрев отдельно.
-Скорость combined включает правила, GLiNER и слияние. Это не API-латенси,
-не нагрузочный тест, не доказательство постоянной стоимости длинной сессии.
+TP/FP/FN: совпадение типа и точных границ, дополнительно — любое пересечение
+того же типа. Сопоставление взаимно однозначное. Тексты короткие и ручные;
+частоты нерепрезентативны. Сессионный F2 и задержка в сообщениях не считаются.
+
+Латенси: CPU, batch=1, три повтора после прогрева, threads из config; p95
+nearest-rank по всем повторам. Загрузка и прогрев отдельно. В v2 combined
+включает regex, GLiNER, конверсию адаптера и merge; в старом v1 конверсия не входила.
+Это не HTTP-латенси и не нагрузочный тест. Совпадение скорости на другом железе
+не обещается. Повторы должны давать одинаковые predictions, иначе run завершается
+ошибкой. Межтиповые конфликты сохранены как свойство исследуемого baseline.
