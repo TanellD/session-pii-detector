@@ -17,6 +17,8 @@ wandb/
 .env.*
 !.env.example
 .venv/
+.venv-research/
+.cache-research/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/
