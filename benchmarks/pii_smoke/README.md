@@ -25,7 +25,7 @@ $env:HF_HUB_OFFLINE = '1'
 $env:TRANSFORMERS_OFFLINE = '1'
 .\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.dataset --version v2
 .\.venv-task12-locked\Scripts\python.exe -m unittest discover -s tests -p 'test*.py'
-.\.venv-task12-locked\Scripts\python.exe tools/validate_task12.py
+.\.venv-task12-locked\Scripts\python.exe tools/validate_api_examples.py
 .\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.run --output runs/task12-smoke-v2
 .\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.report --input runs/task12-smoke-v2
 ```
@@ -69,7 +69,7 @@ Checksum не подтверждает выдачу номера. Паспорт
 ИНН рассматривается только физлица, длина 12 цифр.
 
 PERSON объединяет полное имя и части: разделение классов — отдельный адаптер,
-здесь он не реализован. [Таблица покрытия классов](../../docs/research/notes/task-12-class-coverage.md)
+здесь он не реализован. [Таблица покрытия классов](../../docs/research/notes/pii-class-coverage.md)
 показывает, какие примеры и типы реально проверены. SPECIAL_CATEGORY означает
 упоминание сигнала, не юридический вывод. Отрицания извлекаются как упоминания;
 истинность фактов, отзывы и принадлежность человеку здесь не оцениваются.

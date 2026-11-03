@@ -16,11 +16,9 @@ wandb/
 .env
 .env.*
 !.env.example
-.venv/
-.venv-research/
-.venv-task12-clean/
-.venv-task12-locked/
+.venv*/
 .cache-research/
+.ruff_cache/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/

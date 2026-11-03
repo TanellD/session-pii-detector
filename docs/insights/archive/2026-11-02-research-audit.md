@@ -1,8 +1,10 @@
 # Аудит готовности #12: что ещё нужно закончить
 
 Исторический снимок до исправлений. Перечисленные недоделки локальной работы
-закрыты: [исправления и повторные проверки](2026-11-02-task12-audit-fixes.md).
+закрыты: [исправления и повторные проверки](../2026-11-02-reproducibility-checks.md).
 Исходные доказательства и формулировки аудита сохранены для трассировки.
+Старые имена файлов и команды относятся к указанному ниже снимку кода;
+актуальный вход — [итог исследования](../../project/detector-research-summary.md).
 
 - Дата: 02.11.2026.
 - Автор: `Kopylov-Andrey`.
@@ -34,7 +36,7 @@ UNK-токенов. Это не доказывает эквивалентнос�
 ```powershell
 .\.venv-research\Scripts\python.exe -m benchmarks.pii_smoke.run --output runs/task12-audit-replay
 .\.venv-research\Scripts\python.exe -m unittest discover -s tests -p test_pii_smoke.py
-.\.venv-research\Scripts\python.exe tools/validate_task12.py
+.\.venv-research\Scripts\python.exe tools/validate_api_examples.py
 .\.venv-research\Scripts\python.exe -m pip check
 ```
 

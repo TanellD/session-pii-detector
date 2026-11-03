@@ -29,8 +29,8 @@
 адаптер частей не реализован. CPU-цифры не сравнивать напрямую с A100 ментора.
 
 Команда чисел: `python -m benchmarks.pii_smoke.report --input runs/task12-smoke-v2`;
-[полный протокол](../../docs/experiments/2026-11-02-task12-gliner-cpu-v2.md),
-[покрытие классов](../../docs/research/notes/task-12-class-coverage.md).
+[полный протокол](../../docs/experiments/2026-11-02-gliner-cpu.md),
+[покрытие классов](../../docs/research/notes/pii-class-coverage.md).
 Проверены чистая установка из lock и offline-загрузка по SHA. Новые числа v2
 не являются улучшением модели на v1: набор и протокол замера различаются.
 Далее: согласовать классы/правила, проверить Guard Omni и Natasha на независимых

@@ -8,7 +8,7 @@ import unittest
 
 from benchmarks.pii_smoke.evaluate import aggregate, latency_summary
 from benchmarks.pii_smoke.report import load_verified, render
-from tools.validate_task12 import ROOT, validate_pair
+from tools.validate_api_examples import ROOT, validate_pair
 
 
 class ReportChecks(unittest.TestCase):
@@ -89,7 +89,7 @@ class ContractChecks(unittest.TestCase):
         cls.pairs = {
             pair["name"]: pair
             for pair in json.loads(
-                (ROOT / "docs/api/session-pii-examples.json").read_text(
+                (ROOT / "docs/api/session-api.examples.json").read_text(
                     encoding="utf-8"
                 )
             )["pairs"]

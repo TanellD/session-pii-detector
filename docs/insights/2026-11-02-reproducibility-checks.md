@@ -2,7 +2,7 @@
 
 - Дата: 02.11.2026.
 - Автор: `Kopylov-Andrey`.
-- Связано: [исходный аудит](2026-11-02-task12-completion-audit.md), #12.
+- Связано: [исходный аудит](archive/2026-11-02-research-audit.md), #12.
 - Код исправлений: `d5ab66b10b7fbc9ce921aa79b19fd2b41c9ef63f`.
 
 ## Что изменено и чем проверено
@@ -23,9 +23,9 @@
 ```powershell
 .\.venv-task12-locked\Scripts\python.exe -m pip check
 .\.venv-task12-locked\Scripts\python.exe -m unittest discover -s tests -p 'test*.py'
-.\.venv-task12-locked\Scripts\python.exe tools/validate_task12.py
-.\.venv-task12-locked\Scripts\python.exe -m ruff check benchmarks/pii_smoke tools/validate_task12.py tests
-.\.venv-task12-locked\Scripts\python.exe -m ruff format --check benchmarks/pii_smoke tools/validate_task12.py tests
+.\.venv-task12-locked\Scripts\python.exe tools/validate_api_examples.py
+.\.venv-task12-locked\Scripts\python.exe -m ruff check benchmarks/pii_smoke tools/validate_api_examples.py tests
+.\.venv-task12-locked\Scripts\python.exe -m ruff format --check benchmarks/pii_smoke tools/validate_api_examples.py tests
 $env:PRE_COMMIT_HOME = Join-Path (Get-Location) '.cache-research/pre-commit'
 .\.venv-task12-locked\Scripts\python.exe -m pre_commit run --all-files
 git diff --check
@@ -59,8 +59,8 @@ for mode in ('regex', 'gliner', 'combined'):
 '@ | .\.venv-task12-locked\Scripts\python.exe -
 ```
 
-Новый [эксперимент v2](../experiments/2026-11-02-task12-gliner-cpu-v2.md) добавляет
-случаи имён. По нему обновлены слайды и [покрытие классов](../research/notes/task-12-class-coverage.md).
+Новый [эксперимент v2](../experiments/2026-11-02-gliner-cpu.md) добавляет
+случаи имён. По нему обновлены слайды и [покрытие классов](../research/notes/pii-class-coverage.md).
 Исходные data, run, отчёт v1 и audit-replay сохранены отдельно.
 
 ## Что это значит для проекта

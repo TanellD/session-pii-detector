@@ -8,7 +8,7 @@ from jsonschema import Draft202012Validator, ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = json.loads(
-    (ROOT / "docs/api/session-pii.schema.json").read_text(encoding="utf-8")
+    (ROOT / "docs/api/session-api.schema.json").read_text(encoding="utf-8")
 )
 
 
@@ -202,7 +202,7 @@ def semantic_negative_cases(pair):
 def main():
     Draft202012Validator.check_schema(SCHEMA)
     examples = json.loads(
-        (ROOT / "docs/api/session-pii-examples.json").read_text(encoding="utf-8")
+        (ROOT / "docs/api/session-api.examples.json").read_text(encoding="utf-8")
     )
     checks = 0
     pairs = {pair["name"]: pair for pair in examples["pairs"]}

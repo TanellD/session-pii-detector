@@ -3,5 +3,5 @@
 Статус: **не выбрана**. Заполняется на этапе 2 после ответов на исследовательские вопросы и согласования с ментором. Выбор фиксируется ADR.
 
 Для обсуждения по #12: [предложение ADR-0003](../decisions/0003-detector-independent-session-layer.md),
-[контракт API v0.1](../api/session-pii-v0.1.md), [сравнение детекторов](../research/notes/task-12-comparison.md).
+[контракт API v0.1](../api/session-api.md), [сравнение детекторов](../research/notes/pii-detectors-comparison.md).
 Это черновики; решение команды и совместимость с внутренним API HiveTrace не подтверждены.
