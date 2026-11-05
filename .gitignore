@@ -25,6 +25,7 @@ __pycache__/
 site/
 deliverables/**/*.pdf
 deliverables/**/*.pptx
+!deliverables/01-review-2026-11-05/checkpoint.pdf
 
 # ОС / IDE
 .DS_Store

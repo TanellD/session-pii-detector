@@ -8,6 +8,8 @@
 - [Команда и встречи](project/team.md)
 - [Вопросы к ментору и команде](project/open-questions.md)
 - [Глоссарий](project/glossary.md)
+- [Ответы ментора — второй раунд](meetings/2026-11-05-mentor-answers.md)
+- [Презентация первого чекпоинта](../deliverables/01-review-2026-11-05/README.md)
 
 ## Исследование
 - [Источники](research/sources.md)
