@@ -88,18 +88,9 @@ def chrome(page, number, eyebrow, title):
     page.text(80, 44, 1200, eyebrow.upper(), 21, GREY, True)
     page.text(80, 98, 1430, title, 51, INK, True)
     page.box(80, 187, 90, 5, BLUE)
-    brand_motif(page)
     page.box(80, 832, 1440, 2, BORDER)
     page.text(80, 851, 1260, "SESSION PII  /  ЧЕКПОИНТ ИССЛЕДОВАНИЯ  /  05.11.2026", 18, GREY)
     page.text(1460, 846, 60, f"{number:02d}", 25, BLUE, True)
-
-
-def brand_motif(page):
-    # An abstract hexagon motif inspired by the provided report's geometry.
-    for cx, cy, color in [(1417, 64, "D9E1FF"), (1445, 64, "9DAFFF"), (1473, 64, BLUE)]:
-        points = [(cx + 20*math.cos(math.pi/6+i*math.tau/6),
-                   cy + 20*math.sin(math.pi/6+i*math.tau/6)) for i in range(6)]
-        page.polygon(points, color)
 
 
 def circle_polygon(cx, cy, radius):
@@ -168,7 +159,6 @@ def build_pages(telegram):
     pages = []
     p = Page("Задача", notes[0])
     p.text(80, 57, 1300, "SESSION PII  /  ИССЛЕДОВАТЕЛЬСКИЙ ПРОЕКТ", 22, BLUE, True)
-    brand_motif(p)
     p.box(80, 130, 90, 5, BLUE)
     p.text(80, 154, 680, "Персональные данные\nв контексте сессии", 56, INK, True)
     p.text(80, 373, 650, "Находим персональные данные в сообщениях и отслеживаем, как накопленный контекст меняет оценку сессии.", 34, GREY)
