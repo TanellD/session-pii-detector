@@ -11,6 +11,9 @@
 
 ## Исследование
 - [Источники](research/sources.md)
+- [Промежуточный ответ по данным и сценариям, #13](project/data-research-summary.md)
+- [Русскоязычные источники данных](research/notes/russian-pii-datasets.md)
+- [Данные с моментом возникновения ПДн: близкий аналог](research/notes/dialogue-onset-data.md)
 
 ## Знания (заполняются по мере ответов на вопросы)
 - [ПДн и момент перехода сессии в ПДн](kb/pii-definition.md)
@@ -23,6 +26,10 @@
 - [Инструкция по разметке](data/annotation-guidelines.md)
 - [Формат данных](data/schema.md)
 - [Карточка датасета](data/dataset-card.md)
+- [Сценарии для командного обсуждения](data/scenario-discussion.md)
+- [План получения русских сессионных данных](data/synthetic-generation-plan.md)
+- [Черновик few-shot-промптов](data/prompts/session-generation.md)
+- [Предложения к разметке для #13](data/annotation-proposals.md)
 
 ## Журнал
 - [Решения (ADR)](decisions/) · [Инсайты](insights/) · [Эксперименты](experiments/) · [Встречи](meetings/)
