@@ -1,4 +1,4 @@
-"""Extraction diagnostics only, not the project's still-undefined session metrics."""
+"""Extraction diagnostics only; session metrics are defined in docs/kb/metrics.md."""
 
 from collections import Counter
 import math

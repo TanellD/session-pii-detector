@@ -17,6 +17,8 @@
 - [ПДн и момент перехода сессии в ПДн](kb/pii-definition.md)
 - [Линковка сущностей](kb/entity-linking.md)
 - [Метрики](kb/metrics.md)
+- [Открытые вопросы перед замером метрик](project/metrics-open-questions.md)
+- [Проект ТЗ на разметку для метрик](data/metrics-annotation-requirements.md)
 - [Бюджет латенси](kb/latency-budget.md)
 - [Архитектура](kb/architecture.md)
 
