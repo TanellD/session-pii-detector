@@ -15,6 +15,7 @@
 | Что | Где |
 |---|---|
 | Вход в базу знаний | [docs/index.md](docs/index.md) |
+| Исследование PII-детекторов и API | [Результат исследования](docs/project/detector-research-summary.md) |
 | План и чекпоинты | [docs/project/roadmap.md](docs/project/roadmap.md) |
 | Открытые вопросы (к ментору и команде) | [docs/project/open-questions.md](docs/project/open-questions.md) |
 | Как мы работаем | [CONTRIBUTING.md](CONTRIBUTING.md) |
