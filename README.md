@@ -26,6 +26,7 @@
 | Синтетические диалоги | [Примеры и разбор разногласий](docs/data/annotation-synthetic-examples.md) |
 | Первый проход LLM | [Отчёт и ограничения](docs/experiments/2026-11-18-llm-annotation-pilot.md) |
 | Статистика населённых пунктов и домов | [Расчёт средних](docs/experiments/2026-11-18-population-size-means.md) |
+| Исследование PII-детекторов и API | [Результат исследования](docs/project/detector-research-summary.md) |
 | План и чекпоинты | [docs/project/roadmap.md](docs/project/roadmap.md) |
 | Открытые вопросы (к ментору и команде) | [docs/project/open-questions.md](docs/project/open-questions.md) |
 | Как мы работаем | [CONTRIBUTING.md](CONTRIBUTING.md) |

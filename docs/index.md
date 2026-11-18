@@ -53,11 +53,14 @@
 - [Рабочий справочник статистических оснований разметки](research/notes/annotation-statistics-handbook-2026-11-15.md)
 - [Пол и частоты ФИО; запуск сборщика статистики hh](research/notes/sex-name-probabilities-and-hh-runbook-2026-11-15.md)
 - [Выбранный источник профессиональной статистики: занятость Росстата](research/notes/rosstat-occupation-reference-2026-11-15.md)
+- [Исследование PII-детекторов: результат, эксперимент и API](project/detector-research-summary.md)
 
 ## Знания (заполняются по мере ответов на вопросы)
 - [ПДн и момент перехода сессии в ПДн](kb/pii-definition.md)
 - [Линковка сущностей](kb/entity-linking.md)
 - [Метрики](kb/metrics.md)
+- [Открытые вопросы перед замером метрик](project/metrics-open-questions.md)
+- [Проект ТЗ на разметку для метрик](data/metrics-annotation-requirements.md)
 - [Бюджет латенси](kb/latency-budget.md)
 - [Архитектура](kb/architecture.md)
 
