@@ -1,0 +1,119 @@
+{
+  "version": "2026-11-15-working",
+  "status": "working_decisions_not_annotation_guideline_release",
+  "statistics_selection": "latest_verified_per_indicator_and_geography",
+  "allow_silent_old_source_fallback": false,
+  "allow_forecast_as_observation": false,
+  "candidate_threshold": 100,
+  "candidate_comparison": "le",
+  "employer_size": {
+    "value": 454.070508887227,
+    "method": "sum_squared_headcount_over_sum_headcount",
+    "role": "fallback_for_person_linked_employer",
+    "source_url": "https://file.nalog.ru/opendata/7707329152-sshr2019/data-20261025-structure-20200408.zip",
+    "source_sha256": "89f6d8cac15fa602a86e767003e44927fc8e5187aef31473a23a8218b8fe5e34",
+    "reporting_date": "2025-12-31",
+    "reproduce": "python -X utf8 tools/summarize_organization_sizes.py --show"
+  },
+  "settlement_population_bands": [
+    {"id": "under_1000", "min_inclusive": 0, "max_exclusive": 1000},
+    {"id": "1000_to_10000", "min_inclusive": 1000, "max_exclusive": 10000},
+    {"id": "10000_to_100000", "min_inclusive": 10000, "max_exclusive": 100000},
+    {"id": "100000_to_500000", "min_inclusive": 100000, "max_exclusive": 500000},
+    {"id": "500000_to_1000000", "min_inclusive": 500000, "max_exclusive": 1000000},
+    {"id": "at_least_1000000", "min_inclusive": 1000000, "max_exclusive": null}
+  ],
+  "address": {
+    "full_requires": "house_identified_with_geographic_context",
+    "apartment_required": false,
+    "retain_resolved_level": true,
+    "alone_alert": false,
+    "apartment_building_rule": "apartment_count_times_mean_residents_per_occupied_apartment",
+    "apartment_building_assumption": "all_apartments_occupied_approved_temporary_approximation",
+    "missing_apartment_count": "unknown_not_zero",
+    "full_coefficient": null,
+    "partial_coefficient": null
+  },
+  "occupation": {
+    "primary_source": "rosstat_labor_force_survey",
+    "source_catalog_url": "https://www.rosstat.gov.ru/folder/210/document/13211",
+    "statistic": "employed_people_by_occupation_main_job",
+    "classification": "OKZ",
+    "conditional_denominator": "employed_people_same_period_and_coverage",
+    "hh_distribution_role": "not_used",
+    "reference_year": 2023,
+    "import_status": "verified_historical_source_temporarily_approved_by_user",
+    "mapping_path": "configs/occupation-okz-mapping.json",
+    "verified_historical_reference": {
+      "publication_year": 2024,
+      "reference_year": 2023,
+      "table": "2.40",
+      "path": "data/reference/rosstat-occupations-2023.json",
+      "source_sha256": "dbf9fcfdccbbf23afd4b91d8969745de7a4cd95884ca9a40c3f3d4d24b1bea51",
+      "reproduce": "python -X utf8 tools/inspect_rosstat_occupation_pdf.py",
+      "current_use": "temporarily_approved_by_user_with_date_label"
+    },
+    "sex_conditioning": "use_joint_occupation_sex_counts_when_available",
+    "unmapped_label": "other",
+    "unmapped_multiplier": null
+  },
+  "employer_occupation_rule": "one_plus_size_minus_one_times_joint_occupation_sex_share_among_all_employed",
+  "employer_occupation_rule_status": "approved_working_approximation",
+  "geography_reference": "vpn2020_temporarily_approved_with_date_label",
+  "small_settlement_fallback": {
+    "value": 5000,
+    "status": "approved_temporary_conservative_approximation",
+    "requires": "specific_identified_settlement_and_confirmed_at_most_5000_with_source",
+    "missing_reference_is_confirmation": false,
+    "sex_multiplier": null
+  },
+  "housing_reference": "data/reference/housing-occupancy-vpn2020.json",
+  "housing_mean_use": "approved_temporary_mean_for_confirmed_occupied_unit_type",
+  "address_plus_other_personal_attribute": "alert_if_accepted_positive_address_estimate_within_threshold",
+  "relationship_use": "link_only_no_numerical_reduction",
+  "name_frequency_use": "research_only_not_annotation_ground_truth",
+  "partial_name_plus_attribute": {
+    "enabled": true,
+    "zone": "orange",
+    "combinations": {
+      "fi": ["last_name", "first_name"],
+      "io": ["first_name", "patronymic"],
+      "fo": ["last_name", "patronymic"]
+    },
+    "status": "user_approved_working_rule_2026-11-17",
+    "minimum_distinct_complete_name_parts": 2,
+    "additional_attributes": ["full_residential_address", "complete_personal_phone", "complete_personal_email"],
+    "full_name_alone_alert": false,
+    "numerical_name_estimate": null
+  },
+  "annotation_schema": "annotation-mvp-v2",
+  "annotation_semantics": {
+    "updated_at": "2026-11-18",
+    "person_unknown_value": null,
+    "unlinked_entities_trigger_verdict_uncertainty": false,
+    "unlinked_contacts_contribute_to_alert": false,
+    "explicit_first_person_self_attribution": true,
+    "pronoun_chain_resolution": false,
+    "annotation_uncertain_means": "alert_verdict_undetermined_not_unknown_entity_owner",
+    "determinate_negative_uncertainty": false,
+    "missing_statistics_reason": "insufficient_statistics",
+    "legacy_person_attribution_reason": "read_compatibility_only_not_for_null_person"
+  },
+  "annotation_full_values_only": true,
+  "organization_zone": "yellow",
+  "size_fallbacks": {
+    "method": "resident_weighted_mean",
+    "units": ["settlement", "street", "residential_building"],
+    "settlement_grouping": "settlement_type_and_region_then_type_national",
+    "status": "calculated_reference_not_connected_to_estimator",
+    "prepared_reference_path": "data/reference/proposed-population-size-means.json",
+    "prepared_reference_use_for_alert": false,
+    "missing_value": "unknown_not_zero"
+  },
+  "phone_email_rules": "complete_personal_phone_and_email_same_person_alert",
+  "sex_enabled": true,
+  "sex_name_combination": "conditional_probabilities_no_double_counting",
+  "age_as_required_input": false,
+  "age_as_filter": false,
+  "name_frequency_target": "all_residents_of_russia_all_ages"
+}
