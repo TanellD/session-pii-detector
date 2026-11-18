@@ -37,7 +37,7 @@ class CalculatorTests(unittest.TestCase):
         email["person_id"] = "p1"
         self.assertTrue(self.calculator.session([phone, email])["session_alert"])
         email["usage"] = "shared"
-        self.assertIsNone(self.calculator.session([phone, email])["session_alert"])
+        self.assertFalse(self.calculator.session([phone, email])["session_alert"])
 
     def test_name_pairs_and_approved_contacts_in_both_orders(self):
         for kinds, marker in ((("first_name", "last_name"), "fi"), (("first_name", "patronymic"), "io"), (("last_name", "patronymic"), "fo")):
@@ -185,7 +185,7 @@ class CalculatorTests(unittest.TestCase):
         rows = [fact("first_name", "[ИМЯ]"), fact("last_name", "[ФАМИЛИЯ]"), fact("patronymic", "[ОТЧЕСТВО]")]
         self.assertEqual([f["type"] for f in normalize_state(rows)], ["fio"])
         self.assertEqual(len(rows), 3)
-        self.assertIsNone(self.calculator.session(rows)["session_alert"])
+        self.assertFalse(self.calculator.session(rows)["session_alert"])
 
     def test_component_correction_updates_explicit_full_name_without_mutating_history(self):
         rows = [fact("fio", "Тестов Тестимир Макетович"), fact("first_name", "Образимир")]

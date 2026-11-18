@@ -63,4 +63,19 @@ python -X utf8 tools/annotation_calculator.py --policy-only --port 8766
 
 Оценщик возвращает внутренний `address_fact` для исследовательского калькулятора; это не расширяет поля сущности в `annotation-mvp-v2`. Загрузка JSON-аннотации не вызывает внешнее разрешение всех адресов автоматически. Для этого используется отдельная явная операция адресной оценки.
 
-Проверки: `python -X utf8 -m unittest discover -s tests -p test_address_population_estimator.py`.
+## Адресный этап для JSON-разметки
+
+В калькуляторе отметьте «Передать адреса с известной персоной в DaData…» перед проверкой JSON. Запрос `POST /api/annotation/enrich` принимает ту же аннотацию, выполняет общий адресный оценщик и возвращает оценку с отдельным `address_enrichment`. Сущности, их границы и принадлежность не меняются. Адреса без персоны не отправляются. Неоднозначная подсказка даёт пометку для уточнения, а не автоматический выбор первого дома.
+
+Для повтора без сети передайте в `POST /api/annotation` объект `{"annotation": <исходная аннотация>, "address_enrichment": <сохранённый этап>}`. Этап проверяется по хешам аннотации, политики и жилищного справочника. Смешивание несовместимых версий отклоняется. Старые результаты не переписываются.
+
+CLI для одной сессии:
+
+```powershell
+python -X utf8 tools/annotation_address_enrichment.py --input path/to/annotation.json --output data/private/address-stage/run-01.json
+python -X utf8 tools/annotation_contract.py --input path/to/annotation.json --address-enrichment data/private/address-stage/run-01.json
+```
+
+Первая команда явно обращается к внешнему сервису и требует ключа. Вторая использует сохранённый этап без сети. Результат сохраняется только в новом игнорируемом файле внутри `data/`. Для режима `--policy-only` используйте этот флаг в обеих командах: жилищные справочники должны совпадать. Исправление разметки или изменение источников оформляется новым прогоном; исторические пометки старого прогона сохраняются.
+
+Проверки: `python -X utf8 -m unittest discover -s tests -p test_address_population_estimator.py` и `python -X utf8 -m unittest discover -s tests -p test_annotation_policy_alignment.py`.

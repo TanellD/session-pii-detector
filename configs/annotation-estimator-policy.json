@@ -1,5 +1,6 @@
 {
-  "version": "2026-11-15-working",
+  "version": "2026-11-18-working-v2",
+  "taxonomy_version": "mvp-name-parts-age-v1",
   "status": "working_decisions_not_annotation_guideline_release",
   "statistics_selection": "latest_verified_per_indicator_and_geography",
   "allow_silent_old_source_fallback": false,
@@ -115,7 +116,10 @@
     "unlinked_contacts_contribute_to_alert": false,
     "explicit_first_person_self_attribution": true,
     "pronoun_chain_resolution": false,
-    "annotation_uncertain_means": "alert_verdict_undetermined_not_unknown_entity_owner",
+    "annotation_uncertain_means": "clarification_marker_preserved_in_history_not_an_alert",
+    "uncertain_step_binary_alert": false,
+    "preserve_previous_uncertainty": true,
+    "exclude_uncertain_cases_from_binary_metrics": false,
     "determinate_negative_uncertainty": false,
     "missing_statistics_reason": "insufficient_statistics",
     "legacy_person_attribution_reason": "read_compatibility_only_not_for_null_person"
@@ -136,5 +140,9 @@
   "sex_name_combination": "conditional_probabilities_no_double_counting",
   "age_as_required_input": false,
   "age_as_filter": false,
+  "age_entity_enabled": true,
+  "age_zone": "yellow",
+  "age_reference_status": "official_source_identified_not_connected",
+  "age_reference_catalog": "https://rosstat.gov.ru/compendium/document/13284",
   "name_frequency_target": "all_residents_of_russia_all_ages"
 }

@@ -35,17 +35,17 @@ class ContractTests(unittest.TestCase):
                              "clarification_reason": "person_attribution"}
         result = assess(doc, self.calculator)
         self.assertEqual(result["messages"][-1]["assessment"], "not_triggered")
-        self.assertFalse(result["case_flags"]["annotation_uncertain"])
-        self.assertIsNone(result["case_flags"]["clarification_reason"])
+        self.assertTrue(result["case_flags"]["annotation_uncertain"])
+        self.assertEqual(result["case_flags"]["clarification_reason"], "person_attribution")
         self.assertTrue(all(e["person_id"] is None for e in doc["entities"]))
 
-    def test_known_negative_clears_stale_missing_statistics_flag(self):
+    def test_known_negative_preserves_input_missing_statistics_flag(self):
         doc = copy.deepcopy(self.by_id["unassigned_contacts"])
         doc["case_flags"] = {"is_example": False, "annotation_uncertain": True,
                              "clarification_reason": "insufficient_statistics"}
         doc["entities"] = []
         result = assess(doc, self.calculator)
-        self.assertFalse(result["case_flags"]["annotation_uncertain"])
+        self.assertTrue(result["case_flags"]["annotation_uncertain"])
 
     def test_v2_rejects_full_name_and_relationship_as_annotation_types(self):
         for kind in ("fio", "relationship"):

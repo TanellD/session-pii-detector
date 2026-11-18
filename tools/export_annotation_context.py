@@ -24,9 +24,10 @@ def build_context():
             "A null person_id is not by itself uncertainty about the alert verdict",
             "Unlinked service contacts cannot supply a personal alert condition",
             "Explicit first-person ownership is allowed; pronoun chains are not resolved",
-            "A determinate negative verdict has annotation_uncertain=false",
+            "Uncertainty is a retained clarification marker; without a sufficient rule the binary alert is false",
             "Prepared size means are not active calculator rules until connected",
-            "The evaluator determines the final missing-statistics flag; do not infer it solely from the existence of a null person_id"]}
+            "Previous prefix uncertainty and input annotation flags are preserved after later alerts",
+            "Age is yellow; the population age reference is not yet connected"]}
 
 
 if __name__ == "__main__":

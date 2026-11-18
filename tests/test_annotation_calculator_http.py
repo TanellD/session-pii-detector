@@ -74,6 +74,15 @@ class CalculatorHttpTests(unittest.TestCase):
                 result = json.load(response)
                 self.assertEqual(result["first_alert"]["message_id"], "m3")
                 self.assertEqual(result["first_alert"]["reason"], "combination_rule")
+            # Здесь нет адресов: проверяется проводка общего этапа и повтор
+            # его результата без сети, а не доступность внешнего провайдера.
+            with urlopen(Request(base + "/api/annotation/enrich", data=json.dumps(doc).encode(),
+                         headers={"Content-Type": "application/json"}), timeout=2) as response:
+                enriched = json.load(response)
+            self.assertEqual(enriched["address_enrichment"]["results"], {})
+            with post_annotation({"annotation": doc, "address_enrichment": enriched["address_enrichment"]}) as response:
+                replayed = json.load(response)
+            self.assertEqual(replayed["first_alert"], enriched["first_alert"])
             doc["entities"][0]["type"] = "fio"
             with self.assertRaises(HTTPError) as error:
                 post_annotation(doc)

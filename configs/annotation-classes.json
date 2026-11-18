@@ -1,0 +1,22 @@
+{
+  "taxonomy_version": "mvp-name-parts-age-v1",
+  "annotation_schema": "annotation-mvp-v2",
+  "classes": {
+    "first_name": "yellow", "last_name": "yellow", "patronymic": "yellow",
+    "sex": "yellow", "age": "yellow", "geography": "yellow",
+    "occupation": "yellow", "organization": "yellow",
+    "phone": "orange", "email": "orange", "address": "orange",
+    "passport": "red", "snils": "red", "individual_inn": "red", "bank_card": "red"
+  },
+  "derived_only": ["fi", "io", "fo", "fio"],
+  "legacy_ner_mapping": {
+    "PHONE": "phone", "EMAIL": "email", "ADDRESS": "address",
+    "CITY": "geography", "GENDER": "sex", "AGE": "age",
+    "OCCUPATION": "occupation", "ORGANIZATION": "organization",
+    "PASSPORT": "passport", "SNILS": "snils", "INN": "individual_inn", "CARD": "bank_card"
+  },
+  "requires_semantic_split_not_rename": ["PERSON", "FULL_NAME"],
+  "out_of_scope": ["DATE_OF_BIRTH", "RELATIONSHIP", "SPECIAL_CATEGORY"],
+  "document_checksum": "diagnostic_not_extraction_filter",
+  "age_numeric_reference": "not_connected"
+}

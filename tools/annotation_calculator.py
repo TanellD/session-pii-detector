@@ -14,7 +14,7 @@ from estimate_occupation_candidates import load_reference, normalized
 
 ROOT = Path(__file__).resolve().parents[1]
 RED = {"passport", "snils", "individual_inn", "bank_card"}
-TYPES = RED | {"phone", "email", "fio", "first_name", "last_name", "patronymic", "sex", "occupation", "organization", "geography", "address", "relationship"}
+TYPES = RED | {"phone", "email", "fio", "first_name", "last_name", "patronymic", "sex", "age", "occupation", "organization", "geography", "address", "relationship"}
 
 
 def normalize_state(facts):
@@ -77,6 +77,8 @@ class Calculator:
         reasons = []
         unresolved = []
         estimates = []
+        if by_type["age"]:
+            unresolved.append("Возраст выделен; проверенный совместный возрастной справочник ещё не подключён")
         rule_codes = []
         address_estimate_count = None
         direct = any(f.get("complete") for kind in RED for f in by_type[kind])
@@ -274,6 +276,7 @@ class Calculator:
         first_alert = None
         first_alert_reason = None
         unassigned = 0
+        attribute_history = []
         for index, fact in enumerate(facts, 1):
             if not isinstance(fact, dict) or fact.get("type") not in TYPES or not isinstance(fact.get("value", ""), str):
                 raise ValueError("Некорректный атрибут")
@@ -289,21 +292,27 @@ class Calculator:
                 unassigned += 1
                 triggered = fact["type"] in RED and fact.get("complete")
                 reason = "red_rule" if triggered else None
+                pending = False
             else:
                 people[person_id].append(fact)
                 assessment = self.person(people[person_id])
                 triggered = assessment["alert"] is True
                 reason = assessment["alert_reason"]
+                pending = assessment["alert"] is None
+            attribute_history.append({"attribute_index": index, "alert": bool(triggered),
+                                      "annotation_uncertain": pending})
             if triggered and first_alert is None:
                 first_alert = index
                 first_alert_reason = reason
         results = {person_id: self.person(rows) for person_id, rows in people.items()}
-        session_alert = True if first_alert is not None else None if any(r["alert"] is None for r in results.values()) else False
+        session_alert = first_alert is not None
+        needs_clarification = any(step["annotation_uncertain"] for step in attribute_history)
         return {"people": results, "first_alert_attribute": first_alert, "session_alert": session_alert,
                 "first_alert_reason": first_alert_reason,
                 "unassigned_attributes": unassigned, "history_unchanged": True,
-                "annotation_uncertain": session_alert is None,
-                "clarification_reason": "insufficient_statistics" if session_alert is None else None,
+                "annotation_uncertain": needs_clarification,
+                "clarification_reason": "insufficient_statistics" if needs_clarification else None,
+                "attribute_history": attribute_history,
                 "notice": "Результат относится к последовательности ручного ввода атрибутов; индекс сообщения диалога не вычисляется."}
 
 
@@ -396,9 +405,17 @@ def serve(policy_only=False, port=8765):
                 data = json.loads(self.rfile.read(length))
                 if self.path == "/api/estimate":
                     self.reply(calculator.session(data["facts"]))
-                elif self.path == "/api/annotation":
+                elif self.path in {"/api/annotation", "/api/annotation/enrich"}:
                     from annotation_contract import assess
-                    self.reply(assess(data, calculator))
+                    from annotation_address_enrichment import build_enrichment
+                    document = data.get("annotation", data)
+                    enrichment = data.get("address_enrichment")
+                    if self.path == "/api/annotation/enrich":
+                        enrichment = build_enrichment(document, calculator)
+                    result = assess(document, calculator, address_enrichment=enrichment)
+                    if enrichment is not None:
+                        result["address_enrichment"] = enrichment
+                    self.reply(result)
                 elif self.path == "/api/address/estimate":
                     from estimate_address_population import estimate_from_query
                     self.reply(estimate_from_query(calculator, data["query"],

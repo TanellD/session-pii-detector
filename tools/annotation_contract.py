@@ -79,6 +79,8 @@ def validate(document):
             raise ValueError("Нужен полный email")
         if entity["type"] == "phone" and len(re.sub(r"\D", "", value)) != 11:
             raise ValueError("Нужен полный телефон с кодом страны")
+        if entity["type"] == "age" and not re.fullmatch(r"(?:0|[1-9]\d{0,2})(?:\s+(?:год|года|лет))?", value):
+            raise ValueError("Нужен явно указанный возраст в полных годах; интервалы и даты рождения не входят в этот тип")
     return messages
 
 
@@ -108,9 +110,12 @@ def to_facts(document, calculator):
     return facts
 
 
-def assess(document, calculator=None):
+def assess(document, calculator=None, address_enrichment=None):
     calculator = calculator or Calculator()
     facts = to_facts(document, calculator)
+    if address_enrichment is not None:
+        from annotation_address_enrichment import apply_enrichment
+        facts = apply_enrichment(document, calculator, facts, address_enrichment)
     by_message, people, history, unknown = defaultdict(list), defaultdict(list), [], []
     for fact in facts:
         by_message[fact["message_id"]].append(fact)
@@ -147,18 +152,18 @@ def assess(document, calculator=None):
         pending = unlinked_pending or any(r["alert"] is None for r in assessments.values())
         history.append({"message_id": message["id"], "rule_alert": reason is not None,
                         "assessment": "triggered" if reason else "insufficient_data" if pending else "not_triggered",
+                        "annotation_uncertain": bool(pending and not reason),
+                        "clarification_reason": "insufficient_statistics" if pending and not reason else None,
                         "reason": reason})
     flags = dict(document.get("case_flags", {"is_example": False, "annotation_uncertain": False, "clarification_reason": None}))
-    # Вычислительная неопределённость определяется заново: устаревшая
-    # отметка LLM не превращает уверенный отрицательный результат в неизвестный.
-    if flags["clarification_reason"] in {"insufficient_statistics", "person_attribution"}:
-        flags["annotation_uncertain"] = False
-        flags["clarification_reason"] = None
-    if first_alert is None and history and history[-1]["assessment"] == "insufficient_data":
+    # Отметки прошлых шагов и исходная ручная отметка сохраняются.
+    # Неуверенность не является алертом и не исключает кейс из бинарного расчёта.
+    if any(step["annotation_uncertain"] for step in history):
         flags["annotation_uncertain"] = True
         if flags["clarification_reason"] is None:
             flags["clarification_reason"] = "insufficient_statistics"
     return {"schema_version": document["schema_version"], "session_id": document["session_id"], "first_alert": first_alert,
+            "policy_version": calculator.policy["version"], "taxonomy_version": calculator.policy["taxonomy_version"],
             "case_flags": flags,
             "session_alert": first_alert is not None, "messages": history,
             "people": {p: calculator.person(rows) for p, rows in people.items()},
@@ -183,6 +188,7 @@ def check_cases(path, calculator=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--policy-only", action="store_true", help="Без локальных справочников; отсутствующие оценки неизвестны")
+    parser.add_argument("--address-enrichment", type=Path, help="Сохранённый адресный этап; без обращений к сети")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--check-cases", type=Path)
     group.add_argument("--input", type=Path)
@@ -191,7 +197,8 @@ def main():
     if args.check_cases:
         result = check_cases(args.check_cases, calculator)
     else:
-        result = assess(json.loads(args.input.read_text(encoding="utf-8")), calculator)
+        enrichment = json.loads(args.address_enrichment.read_text(encoding="utf-8")) if args.address_enrichment else None
+        result = assess(json.loads(args.input.read_text(encoding="utf-8")), calculator, address_enrichment=enrichment)
     # Никогда не печатаем исходные значения сущностей даже при реальном входе.
     if args.input:
         result = {k: v for k, v in result.items() if k != "people"}

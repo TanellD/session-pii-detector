@@ -59,6 +59,8 @@ CASES = [
 
 
 def build(output, policy_only=False):
+    if output.exists() and any(output.iterdir()):
+        raise ValueError("Укажите новый каталог: сохранённый проход не перезаписывается")
     output.mkdir(parents=True, exist_ok=True)
     calculator = Calculator(policy_only=policy_only)
     sessions, annotations, checks = [], [], []
