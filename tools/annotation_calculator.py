@@ -1,5 +1,6 @@
 """Локальный калькулятор оснований разметки: python tools/annotation_calculator.py."""
 
+import argparse
 from collections import defaultdict
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -42,6 +43,7 @@ def normalize_state(facts):
 
 class Calculator:
     def __init__(self, policy_only=False):
+        self.policy_only = policy_only
         self.policy = json.loads((ROOT / "configs/annotation-estimator-policy.json").read_text(encoding="utf-8"))
         self.occupations = None if policy_only else load_reference()
         self.geo = {"rows": []} if policy_only else json.loads((ROOT / "data/reference/annotation-geography-vpn2020.json").read_text(encoding="utf-8"))
@@ -286,10 +288,12 @@ class Calculator:
                 first_alert = index
                 first_alert_reason = reason
         results = {person_id: self.person(rows) for person_id, rows in people.items()}
-        session_alert = True if first_alert is not None else None if unassigned or any(r["alert"] is None for r in results.values()) else False
+        session_alert = True if first_alert is not None else None if any(r["alert"] is None for r in results.values()) else False
         return {"people": results, "first_alert_attribute": first_alert, "session_alert": session_alert,
                 "first_alert_reason": first_alert_reason,
                 "unassigned_attributes": unassigned, "history_unchanged": True,
+                "annotation_uncertain": session_alert is None,
+                "clarification_reason": "insufficient_statistics" if session_alert is None else None,
                 "notice": "Результат относится к последовательности ручного ввода атрибутов; индекс сообщения диалога не вычисляется."}
 
 
@@ -330,8 +334,8 @@ def address_suggestions(query):
         return {"status": "provider_error", "suggestions": [], "message": "Не удалось получить подсказки; запрос и ключ не сохранены."}
 
 
-def serve():
-    calculator = Calculator()
+def serve(policy_only=False, port=8765):
+    calculator = Calculator(policy_only=policy_only)
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
@@ -354,12 +358,17 @@ def serve():
             elif parsed.path == "/api/geography":
                 query = parse_qs(parsed.query).get("q", [""])[0]
                 self.reply({"rows": calculator.search_geography(query), "source": "ВПН-2020"})
+            elif parsed.path == "/api/context":
+                self.reply({"schema_version": calculator.policy["annotation_schema"],
+                            "candidate_threshold": calculator.policy["candidate_threshold"],
+                            "reference_mode": "policy_only" if calculator.policy_only else "local_references",
+                            "prepared_means_connected": False})
             else:
                 self.reply({"error": "not_found"}, 404)
 
         def do_POST(self):
             # Только запросы локального интерфейса с JSON; чужой сайт не может молча передать форму.
-            if self.headers.get("Origin") not in {None, "http://127.0.0.1:8765", "http://localhost:8765"}:
+            if self.headers.get("Origin") not in {None, f"http://127.0.0.1:{self.server.server_port}", f"http://localhost:{self.server.server_port}"}:
                 self.reply({"error": "origin_not_allowed"}, 403)
                 return
             try:
@@ -369,6 +378,9 @@ def serve():
                 data = json.loads(self.rfile.read(length))
                 if self.path == "/api/estimate":
                     self.reply(calculator.session(data["facts"]))
+                elif self.path == "/api/annotation":
+                    from annotation_contract import assess
+                    self.reply(assess(data, calculator))
                 elif self.path == "/api/address":
                     query = data["query"]
                     if not isinstance(query, str) or not 2 <= len(query) <= 500:
@@ -379,9 +391,21 @@ def serve():
             except (ValueError, KeyError, TypeError):
                 self.reply({"error": "invalid_input", "message": "Проверьте структуру атрибутов и выбранные значения."}, 400)
 
-    print("Калькулятор: http://127.0.0.1:8765 — Ctrl+C для остановки. Данные сессии не сохраняются.")
-    ThreadingHTTPServer(("127.0.0.1", 8765), Handler).serve_forever()
+    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    print(f"Калькулятор: http://127.0.0.1:{server.server_port} — Ctrl+C для остановки. Данные сессии не сохраняются.", flush=True)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
 
 
 if __name__ == "__main__":
-    serve()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--policy-only", action="store_true", help="Работать без локальных файлов справочников")
+    parser.add_argument("--port", type=int, default=8765)
+    args = parser.parse_args()
+    if not 0 <= args.port <= 65535:
+        parser.error("Порт должен быть от 0 до 65535")
+    serve(policy_only=args.policy_only, port=args.port)

@@ -210,7 +210,8 @@ class CalculatorTests(unittest.TestCase):
         self.assertTrue(self.calculator.session([fact("snils", person=None, complete=True)])["session_alert"])
         result = self.calculator.session([fact("occupation", "программист", person=None)])
         self.assertEqual(result["people"], {})
-        self.assertIsNone(result["session_alert"])
+        self.assertFalse(result["session_alert"])
+        self.assertFalse(result["annotation_uncertain"])
 
 
 class ReferenceTests(unittest.TestCase):
