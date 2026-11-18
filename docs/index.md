@@ -21,6 +21,8 @@
 
 ## Исследование
 
+- [Статистические основания оценщика](research/notes/annotation-estimator-statistical-basis.md)
+
 - [Средние для неизвестной численности пунктов, улиц и домов](research/notes/mvp-average-fallbacks-2026-11-17.md)
 
 - [ФНС и СРО: отчества, совместные ИО и межисточниковая проверка](research/notes/fns-sro-patronymic-study-2026-11-17.md)
