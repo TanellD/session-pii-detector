@@ -69,6 +69,27 @@
   },
   "housing_reference": "data/reference/housing-occupancy-vpn2020.json",
   "housing_mean_use": "approved_temporary_mean_for_confirmed_occupied_unit_type",
+  "housing_defaults": {
+    "status": "approved_temporary_occupied_unit_approximation",
+    "reference_date": "2021-10-01",
+    "source_url": "https://rosstat.gov.ru/storage/mediabank/Tom11_tab6_VPN-2020.xlsx",
+    "source_sha256": "20db9724ff283053a25fdc3deed693f7e97532c15b9826d53d017853a65b9ade",
+    "reproduce": "python -X utf8 tools/build_housing_occupancy_reference.py",
+    "region": "Российская Федерация",
+    "units": {
+      "apartment": {"occupied_units": 42973744, "residents": 99496891, "mean": 2.315294915890968},
+      "individual_house": {"occupied_units": 15518553, "residents": 42083643, "mean": 2.7118277715712282},
+      "communal_apartment": {"occupied_units": 528432, "residents": 1527417, "mean": 2.890470297029703}
+    }
+  },
+  "automatic_address_estimation": {
+    "provider": "dadata_suggestions",
+    "house_index_path": "data/reference/gisgkh-address-index.sqlite",
+    "requires_selected_or_unique_full_address": true,
+    "single_apartment_count_proves_individual_house": false,
+    "unknown_house_type_result": "unknown",
+    "address_alone_alert": false
+  },
   "address_plus_other_personal_attribute": "alert_if_accepted_positive_address_estimate_within_threshold",
   "relationship_use": "link_only_no_numerical_reduction",
   "name_frequency_use": "research_only_not_annotation_ground_truth",

@@ -4,6 +4,8 @@
 
 ## Проект
 
+- [Оценка жителей по строке адреса](project/address-population-estimator.md)
+
 - [Общий конфиг обработчика и контекст LLM-разметчика](project/annotation-context-config-2026-11-18.md)
 
 - [Рабочее правило: неполное имя и дополнительный личный атрибут](project/partial-name-alert-working-rule-2026-11-17.md)

@@ -14,7 +14,8 @@ class OnboardingTests(unittest.TestCase):
             calculator = Calculator(policy_only=True)
         self.assertIsNone(calculator.occupations)
         self.assertEqual(calculator.geo["rows"], [])
-        self.assertEqual(calculator.housing["rows"], [])
+        self.assertEqual({r["housing_type"] for r in calculator.housing["rows"]},
+                         {"apartment", "individual_house", "communal_apartment"})
 
     def test_missing_occupation_statistics_remain_unknown(self):
         text = "Моя профессия — программист."

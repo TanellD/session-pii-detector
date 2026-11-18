@@ -49,6 +49,13 @@ class Calculator:
         self.geo = {"rows": []} if policy_only else json.loads((ROOT / "data/reference/annotation-geography-vpn2020.json").read_text(encoding="utf-8"))
         self.geo_by_id = {row["id"]: row for row in self.geo["rows"]}
         self.housing = {"rows": []} if policy_only else json.loads((ROOT / "data/reference/housing-occupancy-vpn2020.json").read_text(encoding="utf-8"))
+        defaults = self.policy.get("housing_defaults", {})
+        for kind, unit in defaults.get("units", {}).items():
+            if not any(r["region"] == defaults["region"] and r["settlement"] == "all" and r["housing_type"] == kind
+                       for r in self.housing["rows"]):
+                self.housing["rows"].append({"region": defaults["region"], "settlement": "all", "housing_type": kind,
+                    "mean_residents_per_occupied_unit": unit["mean"], "source_url": defaults["source_url"],
+                    "reference_date": defaults["reference_date"], "source_sha256": defaults["source_sha256"]})
 
     def search_geography(self, query):
         query = normalized(query)
@@ -129,8 +136,11 @@ class Calculator:
             else:
                 estimates.append({"count": geo[sex], "method": "Прямой счётчик территории и пола; ВПН-2020", "source": geo})
         elif not occupation and not organization and sex_facts and not by_type["address"]:
-            country = next(row for row in self.geo["rows"] if row["kind"] == "country")
-            estimates.append({"count": country[sex], "method": "Численность пола; ВПН-2020"})
+            country = next((row for row in self.geo["rows"] if row["kind"] == "country"), None)
+            if country is None:
+                unresolved.append("Статистика пола не подключена")
+            else:
+                estimates.append({"count": country[sex], "method": "Численность пола; ВПН-2020"})
         if by_type["address"]:
             if len(by_type["address"]) == 1:
                 address = by_type["address"][0]
@@ -143,7 +153,7 @@ class Calculator:
                 complete = address.get("completeness") == "full"
                 residence = address.get("role", "default") in {"default", "residence", "проживание"}
                 # Тип жилья подтверждает разметчик, а не слово «дом» из адресного справочника.
-                address_region = "Российская Федерация"
+                address_region = address.get("reference_region", "Российская Федерация")
                 if len(geo_facts) == 1 and geo_facts[0].get("role", "default") in {"default", "residence", "проживание"}:
                     selected_geo = self.geo_by_id.get(geo_facts[0].get("geography_id"))
                     if selected_geo:
@@ -297,7 +307,7 @@ class Calculator:
                 "notice": "Результат относится к последовательности ручного ввода атрибутов; индекс сообщения диалога не вычисляется."}
 
 
-def address_suggestions(query):
+def address_suggestions(query, count=5):
     """Сеть только по явной кнопке поиска. Никаких журналов/сохранения запросов."""
     key = None
     env = ROOT / ".env"
@@ -310,7 +320,9 @@ def address_suggestions(query):
         return {"status": "configuration_required", "suggestions": [],
                 "message": "Добавьте DADATA_API_KEY в локальный .env. Ключ не отправляется в браузер или журнал."}
     url = "https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address"
-    payload = json.dumps({"query": query, "count": 5}).encode("utf-8")
+    if not isinstance(query, str) or not 2 <= len(query) <= 300 or count not in {1, 5}:
+        raise ValueError("Нужна строка адреса от 2 до 300 символов")
+    payload = json.dumps({"query": query, "count": count}).encode("utf-8")
     try:
         request = Request(url, data=payload, headers={"Authorization": "Token " + key,
                           "Content-Type": "application/json", "Accept": "application/json"})
@@ -322,7 +334,11 @@ def address_suggestions(query):
         selected = []
         for item in data.get("suggestions", []):
             fields = item.get("data") or {}
-            selected.append({"value": item["value"], "gar_id": fields.get("fias_id"),
+            selected.append({"value": item["value"], "unrestricted_value": item.get("unrestricted_value", item["value"]),
+                             "gar_id": fields.get("fias_id"), "house_fias_id": fields.get("house_fias_id"),
+                             "country_iso_code": fields.get("country_iso_code"),
+                             "flat_type": fields.get("flat_type"), "has_flat": bool(fields.get("flat")),
+                             "has_room": bool(fields.get("room")) or fields.get("flat_type") in {"ком", "комн", "комната"},
                              "completeness": "full" if fields.get("house") else "partial",
                              "resolved_level": "apartment" if fields.get("flat") else "house" if fields.get("house") else "territory",
                              "region": fields.get("region_with_type"), "settlement": fields.get("settlement_with_type") or fields.get("city_with_type"),
@@ -362,7 +378,9 @@ def serve(policy_only=False, port=8765):
                 self.reply({"schema_version": calculator.policy["annotation_schema"],
                             "candidate_threshold": calculator.policy["candidate_threshold"],
                             "reference_mode": "policy_only" if calculator.policy_only else "local_references",
-                            "prepared_means_connected": False})
+                            "prepared_means_connected": False,
+                            "employer_size": calculator.policy["employer_size"]["value"],
+                            "housing_defaults": calculator.policy.get("housing_defaults", {})})
             else:
                 self.reply({"error": "not_found"}, 404)
 
@@ -381,6 +399,11 @@ def serve(policy_only=False, port=8765):
                 elif self.path == "/api/annotation":
                     from annotation_contract import assess
                     self.reply(assess(data, calculator))
+                elif self.path == "/api/address/estimate":
+                    from estimate_address_population import estimate_from_query
+                    self.reply(estimate_from_query(calculator, data["query"],
+                        lambda value, count: address_suggestions(value, count), selected=data.get("selected", False),
+                        expected_house_id=data.get("expected_house_id")))
                 elif self.path == "/api/address":
                     query = data["query"]
                     if not isinstance(query, str) or not 2 <= len(query) <= 500:
