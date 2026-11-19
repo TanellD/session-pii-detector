@@ -72,6 +72,8 @@
 
 ## Данные
 
+- [Разметка Gemma/Qwen через Radeon Cloud и свой сервер](data/radeon-llm-annotation.md)
+
 - [Как пользоваться ТЗ и запускать разметку](data/annotation-workflow.md)
 
 - [Задание для основной LLM-разметки](data/llm-annotation-prompt.md)
