@@ -153,6 +153,8 @@ def main(argv=None):
     parser.add_argument("--timeout", type=float, default=180)
     parser.add_argument("--delay", type=float, default=2)
     parser.add_argument("--revision", default="not_reported_by_provider", help="Ревизия весов, если известна оператору")
+    parser.add_argument("--continue-on-failure", action="store_true",
+                        help="После невалидного ответа/тайм-аута перейти к следующей сессии без повтора; HTTP-ошибки останавливают запуск")
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument("--dry-run", action="store_true", help="Проверить вход/конфиг без сети и создания каталога")
     modes.add_argument("--probe", action="store_true", help="Один синтетический запрос проверки формата, без разметки корпуса")
@@ -222,6 +224,7 @@ def main(argv=None):
         "input_sha256": hashlib.sha256(args.input.read_bytes()).hexdigest(),
         "prompt_sha256": hashlib.sha256(instructions.encode()).hexdigest(),
         "schema_sha256": hashlib.sha256(json.dumps(schema, sort_keys=True).encode()).hexdigest(),
+        "continue_on_failure": args.continue_on_failure,
         "api_requests": 0, "records": [], "human_review_status": "pending", "quality_metrics": None}
     output.mkdir(parents=True)
     def save():
@@ -255,9 +258,9 @@ def main(argv=None):
         save()
         print(json.dumps({"session_id": session["session_id"], "status": record["status"],
                           "http_status": record.get("http_status")}), flush=True)
-        if record["status"] != "valid":
+        if record["status"] != "valid" and (not args.continue_on_failure or record["status"] == "http_error"):
             return 1  # Без автоматического повтора/ослабления формата.
-    return 0
+    return int(any(r["status"] != "valid" for r in manifest["records"]))
 
 
 if __name__ == "__main__":

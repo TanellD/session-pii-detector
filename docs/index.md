@@ -25,6 +25,8 @@
 
 ## Исследование
 
+- [Сравнение Gemma и Qwen на новых синтетических сессиях](experiments/2026-11-19-ten-session-model-comparison.md)
+
 - [Переразметка выбранных диалогов CONFIDE по ТЗ MVP](experiments/2026-11-19-confide-reannotation.md)
 
 - [Источники Владимира: какие сессии и классы подходят для разметки](experiments/2026-11-19-confide-annotation-audit.md)

@@ -97,6 +97,29 @@ class CompatiblePilotTests(unittest.TestCase):
         self.assertTrue((self.path / "run/01-response.json").exists())
         self.assertFalse((self.path / "run/01-annotation.json").exists())
 
+    def test_explicit_continue_skips_timeout_without_retrying_session(self):
+        second = copy.deepcopy(self.source['sessions'][0])
+        second['session_id'] = 'next-session'
+        self.source['sessions'].append(second)
+        self.input.write_text(json.dumps(self.source), encoding='utf-8')
+        second_doc = copy.deepcopy(self.doc)
+        second_doc['session_id'] = 'next-session'
+        with patch('run_compatible_annotation_pilot.local_key', return_value='synthetic-secret'), \
+                patch('run_compatible_annotation_pilot.send', side_effect=[TimeoutError(), self.response(second_doc)]) as send, \
+                contextlib.redirect_stdout(StringIO()):
+            self.assertEqual(main(self.args() + ['--limit', '2', '--delay', '0', '--continue-on-failure']), 1)
+        self.assertEqual(send.call_count, 2)
+        sent_ids = [json.loads(call.args[2]['messages'][1]['content'])['session_id'] for call in send.call_args_list]
+        self.assertEqual(sent_ids, [self.doc['session_id'], 'next-session'])
+        self.assertTrue((self.path / 'run/02-annotation.json').exists())
+
+    def test_explicit_continue_still_stops_on_http_rate_limit(self):
+        with patch('run_compatible_annotation_pilot.local_key', return_value='synthetic-secret'), \
+                patch('run_compatible_annotation_pilot.send', side_effect=HTTPError('https://example.invalid', 429, '', None, None)) as send, \
+                contextlib.redirect_stdout(StringIO()):
+            self.assertEqual(main(self.args() + ['--continue-on-failure']), 1)
+        send.assert_called_once()
+
     def test_incomplete_refused_or_markdown_response_not_repaired(self):
         for reason, message in (("length", {"content": "{}"}), ("stop", {"refusal": "no", "content": "{}"}),
                                 ("stop", {"content": "```json\n{}\n```"})):
