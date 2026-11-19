@@ -25,6 +25,8 @@
 
 ## Исследование
 
+- [Корпуса сессий: CONFIDE, DialogPII, HiCUPID, ABCD и русские task-oriented диалоги](research/notes/session-dataset-candidates-2026-11-19.md)
+
 - [Сравнение Gemma и Qwen на новых синтетических сессиях](experiments/2026-11-19-ten-session-model-comparison.md)
 
 - [Переразметка выбранных диалогов CONFIDE по ТЗ MVP](experiments/2026-11-19-confide-reannotation.md)
