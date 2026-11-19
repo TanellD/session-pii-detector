@@ -25,6 +25,8 @@
 
 ## Исследование
 
+- [Переразметка выбранных диалогов CONFIDE по ТЗ MVP](experiments/2026-11-19-confide-reannotation.md)
+
 - [Источники Владимира: какие сессии и классы подходят для разметки](experiments/2026-11-19-confide-annotation-audit.md)
 
 - [Статистические основания оценщика](research/notes/annotation-estimator-statistical-basis.md)
