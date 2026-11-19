@@ -25,6 +25,8 @@
 
 ## Исследование
 
+- [Источники Владимира: какие сессии и классы подходят для разметки](experiments/2026-11-19-confide-annotation-audit.md)
+
 - [Статистические основания оценщика](research/notes/annotation-estimator-statistical-basis.md)
 
 - [Средние для неизвестной численности пунктов, улиц и домов](research/notes/mvp-average-fallbacks-2026-11-17.md)
