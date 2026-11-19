@@ -89,8 +89,10 @@ class SequentialAnnotationTests(unittest.TestCase):
                     patch('sys.argv',['run_sequential_annotation.py','--input',str(path/'sessions.json'),'--output',str(path/'run'),'--delay','0']), \
                     contextlib.redirect_stdout(StringIO()):
                 self.assertEqual(main(),1)
-            records = json.loads((path/'run/manifest.json').read_text(encoding='utf-8'))['records']
-            return calls,records
+            manifest = json.loads((path/'run/manifest.json').read_text(encoding='utf-8'))
+            self.assertIn('finished_at',manifest)
+            self.assertTrue(all(s['request_seconds'] >= 0 for s in manifest['steps']))
+            return calls,manifest['records']
 
     def test_timeout_stops_session_and_next_session_has_no_previous_state(self):
         calls,records = self.run_failure_case(TimeoutError())

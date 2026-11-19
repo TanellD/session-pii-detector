@@ -25,6 +25,8 @@
 
 ## Исследование
 
+- [Сто синтетических сессий: уточнённая инструкция и последовательная Gemma](experiments/2026-11-19-annotation-100-gemma.md)
+
 - [Русский набор клиентских префиксов: Gemma, алерты и случайная перепроверка](experiments/2026-11-19-russian-session-dataset-gemma-review.md)
 
 - [Корпуса сессий: CONFIDE, DialogPII, HiCUPID, ABCD и русские task-oriented диалоги](research/notes/session-dataset-candidates-2026-11-19.md)

@@ -92,7 +92,10 @@ def main():
         'Разметь ТОЛЬКО current_message_id. Верни JSON annotation-quotes-v1 с session_id и всеми '
         'messages из session без изменения, entities содержит ТОЛЬКО новые упоминания текущего сообщения. '
         'У сущности id,message_id,type,person_id,mention,occurrence; mention — точная цитата без внешних '
-        'пробелов, occurrence — номер вхождения в текущем сообщении от 1. Не возвращай старые сущности. '
+        'пробелов, occurrence — номер вхождения ТОЧНО ТАКОЙ ЖЕ строки mention в текущем сообщении от 1. '
+        'Счёт отдельный для каждой строки: если Соня, Соне и Соню встречаются по одному разу, '
+        'у каждой occurrence=1. Если Соня встречается дважды, у этих двух упоминаний occurrence=1 и 2. '
+        'Не считай разные падежи последовательными вхождениями одной строки. Не возвращай старые сущности. '
         'Используй прежние person_id для явно того же человека, для нового создай новый ID. '
         'Собственные факты этого пользователя относятся его персоне. Прежние null не переназначай. '
         'case_flags относятся доступному префиксу, прежние пометки сохраняются. '
@@ -127,8 +130,10 @@ def main():
             manifest['steps'].append(step)
             manifest['api_requests'] += 1
             save()
+            request_started = time.perf_counter()
             try:
                 response = send(manifest['endpoint'],key,body,args.timeout)
+                step['request_seconds'] = time.perf_counter() - request_started
                 write(output/f'{stem}-response.json',response)
                 step.update(returned_model=response.get('model'),usage=response.get('usage'))
                 raw = response_document(response)
@@ -142,6 +147,7 @@ def main():
                 step.update(status='http_error',http_status=error.code)
             except (URLError,TimeoutError,ValueError,KeyError,IndexError,TypeError) as error:
                 step.update(status='invalid_or_failed',error_type=type(error).__name__)
+            step.setdefault('request_seconds',time.perf_counter() - request_started)
             save()
             print(json.dumps({k:step[k] for k in ('session_id','message_id','status') }),flush=True)
             if step['status'] != 'valid':
@@ -154,6 +160,8 @@ def main():
         save()
         if record['status'] == 'http_error':
             break
+    manifest['finished_at'] = datetime.now(timezone.utc).isoformat()
+    save()
     return int(any(r['status'] != 'valid' for r in manifest['records']))
 
 

@@ -213,6 +213,8 @@ def main(argv=None):
         instructions += ("\nТранспортный формат этого запуска — annotation-quotes-v1. Вместо start/end верни "
             "mention (точный фрагмент исходного сообщения без внешних пробелов) и occurrence "
             "(номер точного вхождения этого фрагмента в данном сообщении, начиная с 1). "
+            "Для каждой точной строки счёт отдельный: если Соня и Соне встречаются по одному разу, "
+            "у каждой occurrence=1; у двух точных повторов Соня номера 1 и 2. "
             "Остальные поля сущности: id, message_id, type, person_id. Не переписывай исходные messages. "
             "Не нормализуй mention. Инструмент вычислит границы Unicode и создаст финальный annotation-mvp-v2.")
     manifest = {"started_at": datetime.now(timezone.utc).isoformat(), "provider": args.provider,
