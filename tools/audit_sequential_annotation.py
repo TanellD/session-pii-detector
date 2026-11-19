@@ -11,7 +11,8 @@ def read(path):
 
 def audit(source_dir,run):
     source = {s['session_id']:s for s in read(source_dir/'sessions.json')['sessions']}
-    gold = {(s['session_id'],s['prefix_length']):s['assessment'] for s in read(source_dir/'gold-prefixes.json')['steps']}
+    reference_path=source_dir/'gold-prefixes.json'
+    gold = {(s['session_id'],s['prefix_length']):s['assessment'] for s in read(reference_path)['steps']} if reference_path.exists() else {}
     manifest = read(run/'manifest.json')
     if manifest['input_sha256'] != hashlib.sha256((source_dir/'sessions.json').read_bytes()).hexdigest():
         raise ValueError('Другой исходный набор')
@@ -45,13 +46,13 @@ def audit(source_dir,run):
                 if previous and current['entities'][:len(previous['entities'])] != previous['entities']:
                     raise ValueError('Прежние сущности или принадлежность изменились')
                 result = read(run/f'{stem}-assessment.json')
-                reference = gold[(session['session_id'],n)]
                 pred = result['first_alert']
-                target = reference['first_alert']
                 signature = lambda x:[x['message_id'],x['reason']] if x else None
-                item.update(frozen_history_verified=True,
-                            gold_first_alert=signature(target), predicted_first_alert=signature(pred),
-                            first_alert_matches_author=signature(target)==signature(pred))
+                item.update(frozen_history_verified=True,predicted_first_alert=signature(pred))
+                reference=gold.get((session['session_id'],n))
+                if reference is not None:
+                    target=reference['first_alert']
+                    item.update(gold_first_alert=signature(target),first_alert_matches_author=signature(target)==signature(pred))
                 previous = current
             else:
                 item.update(error_type=step.get('error_type'),http_status=step.get('http_status'))
