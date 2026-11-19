@@ -32,6 +32,7 @@ def digest(path):
 
 
 def build(candidate_dir, output_dir):
+    candidate_dir, output_dir = candidate_dir.resolve(), output_dir.resolve()
     source_path = candidate_dir / "sessions.json"
     provenance_path = candidate_dir / "provenance.json"
     selection_path = output_dir / "selections.json"
@@ -99,7 +100,7 @@ def build(candidate_dir, output_dir):
         "policy_version": calculator.policy["version"], "taxonomy_version": calculator.policy["taxonomy_version"],
         "sha256": {p.relative_to(ROOT).as_posix(): digest(p) for p in paths},
         "limitations": ["Only selected dev prefixes; not the whole CONFIDE corpus",
-                         "Written-out numbers unsupported; earlier first alerts require adjudication",
+                         "Numeric-only contract; written-out numbers excluded, see review notes for adjudication status",
                          "Original source annotations were inspected; this is not a blinded evaluation"]}
     return {"annotations.json": {"sessions": annotations}, "assessments.json": {"sessions": assessments},
             "review-notes.json": {"sessions": [{"session_id": s["session_id"], "review_notes": s["review_notes"]} for s in chosen],
