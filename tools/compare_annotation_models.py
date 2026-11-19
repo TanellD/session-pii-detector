@@ -88,12 +88,15 @@ def compare(gold_dir, run):
         grouping_exact += owner_exact
         flags_match = expected[sid]['case_flags'] == result['case_flags']
         flags_exact += flags_match
-        raw_flags_match = gold[sid]['case_flags'] == pred['case_flags']
+        model_flags = pred['case_flags']
+        if manifest.get('protocol') == 'sequential_user_only_v1':
+            model_flags = read(run / f'{number:02d}-m{len(pred["messages"]):02d}-model-output.json')['case_flags']
+        raw_flags_match = gold[sid]['case_flags'] == model_flags
         raw_flags_exact += raw_flags_match
         item.update(entity_counts={'matched': len(matched), 'missed': len(missed), 'extra': len(extra)},
                     missing_spans=sorted(missed), extra_spans=sorted(extra),
                     all_spans_and_ownership_exact=owner_exact, processed_flags_exact=flags_match,
-                    model_flags_exact=raw_flags_match, model_flags=pred['case_flags'], gold_flags=gold[sid]['case_flags'],
+                    model_flags_exact=raw_flags_match, model_flags=model_flags, gold_flags=gold[sid]['case_flags'],
                     gold_first_alert=gfirst, predicted_first_alert=pfirst,
                     session_outcome=session_outcome, timely_outcome=timely_outcome)
         cases.append(item)

@@ -78,6 +78,8 @@
 
 ## Данные
 
+- [Шаблоны пользовательских сессий и последовательная разметка без будущего](data/user-only-synthetic-sessions.md)
+
 - [Разметка Gemma/Qwen через Radeon Cloud и свой сервер](data/radeon-llm-annotation.md)
 
 - [Как пользоваться ТЗ и запускать разметку](data/annotation-workflow.md)
