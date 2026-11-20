@@ -4,6 +4,8 @@
 
 ## Проект
 
+- [Сборка Docker-сервиса, API и подключение NER/regexp/линкера](api/service-scaffold.md)
+
 - [Изменения классов, адресного этапа, API и метрик для команды](project/annotation-team-handoff.md)
 
 - [Оценка жителей по строке адреса](project/address-population-estimator.md)
@@ -24,6 +26,8 @@
 - [Закрытие пробелов: рабочие решения и запуск калькулятора](project/annotation-gap-resolution-2026-11-15.md)
 
 ## Исследование
+
+- [Проверка сборки HTTP-каркаса в Docker](experiments/2026-11-20-service-scaffold.md)
 
 - [Сто синтетических сессий: уточнённая инструкция и последовательная Gemma](experiments/2026-11-19-annotation-100-gemma.md)
 

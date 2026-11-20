@@ -9,7 +9,10 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
-from estimate_occupation_candidates import load_reference, normalized
+if __package__:
+    from .estimate_occupation_candidates import load_reference, normalized
+else:
+    from estimate_occupation_candidates import load_reference, normalized
 
 
 ROOT = Path(__file__).resolve().parents[1]

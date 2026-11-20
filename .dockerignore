@@ -1,0 +1,13 @@
+# В контекст сборки попадает только необходимый исходный код.
+**
+!Dockerfile
+!requirements-service.lock.txt
+!src/
+!src/session_pii/
+!src/session_pii/*.py
+!configs/
+!configs/annotation-estimator-policy.json
+!tools/
+!tools/annotation_calculator.py
+!tools/annotation_contract.py
+!tools/estimate_occupation_candidates.py

@@ -18,3 +18,17 @@ jobs:
           python-version: "3.12"
       # Те же хуки, что локально: .pre-commit-config.yaml (в т.ч. gitleaks, ADR-0002)
       - uses: pre-commit/action@v3.0.1
+
+  service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements-service-test.txt
+      - run: python -X utf8 -m unittest discover -s tests/service -v
+      - run: docker compose up --build -d --wait --wait-timeout 60
+      - run: python -X utf8 tools/smoke_service.py
+      - if: always()
+        run: docker compose down

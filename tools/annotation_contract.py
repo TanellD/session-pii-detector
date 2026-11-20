@@ -6,7 +6,10 @@ import json
 from pathlib import Path
 import re
 
-from annotation_calculator import Calculator, RED, TYPES
+if __package__:
+    from .annotation_calculator import Calculator, RED, TYPES
+else:
+    from annotation_calculator import Calculator, RED, TYPES
 
 VERSION = "annotation-mvp-v2"
 LEGACY_VERSION = "annotation-mvp-v1"
