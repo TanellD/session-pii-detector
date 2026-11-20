@@ -7,6 +7,7 @@
 !src/session_pii/*.py
 !configs/
 !configs/annotation-estimator-policy.json
+!configs/runtime-risk-policy.json
 !tools/
 !tools/annotation_calculator.py
 !tools/annotation_contract.py

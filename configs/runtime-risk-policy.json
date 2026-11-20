@@ -1,0 +1,26 @@
+{
+  "version": "runtime-risk-v1",
+  "person_threshold": 0.5,
+  "unknown_threshold": 0.5,
+  "weights": {
+    "first_name": 0.1,
+    "last_name": 0.1,
+    "patronymic": 0.1,
+    "fi": 0.3,
+    "io": 0.3,
+    "fo": 0.3,
+    "fio": 0.3,
+    "sex": 0.1,
+    "age": 0.1,
+    "geography": 0.1,
+    "occupation": 0.1,
+    "organization": 0.1,
+    "phone": 0.3,
+    "email": 0.3,
+    "address": 0.3,
+    "passport": 1.0,
+    "snils": 1.0,
+    "individual_inn": 1.0,
+    "bank_card": 1.0
+  }
+}

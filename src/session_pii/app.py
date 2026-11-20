@@ -6,14 +6,16 @@ from fastapi.responses import JSONResponse
 from .components import StubLinker, StubNER, StubRegexp
 from .models import AnalyzeRequest, AnalyzeResponse, CreateSession, ResetRequest, SessionDetail, Snapshot
 from .pipeline import Pipeline
+from .risk import RiskEvaluator
 from .service import ServiceError, SessionService, Settings
 
 
-def create_app(*, ner=None, regexp=None, linker=None, settings: Settings | None = None):
+def create_app(*, ner=None, regexp=None, linker=None, evaluator: RiskEvaluator | None = None,
+               settings: Settings | None = None):
     # Замените только эти объекты собственными реализациями Protocol.
     pipeline = Pipeline(ner if ner is not None else StubNER(),
                         regexp if regexp is not None else StubRegexp(),
-                        linker if linker is not None else StubLinker())
+                        linker if linker is not None else StubLinker(), evaluator)
     service = SessionService(pipeline,settings)
     app = FastAPI(title='Session PII scaffold',version='0.1.0',
                   description='Каркас со стадиями-заглушками. Текущая сборка не является готовым детектором.')

@@ -71,30 +71,43 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(set(result['verdict']['incomplete_reasons']),
                          {'ner_not_configured','regexp_not_configured','linker_not_configured'})
 
-    def test_cross_message_rule_and_uncertainty_history(self):
+    def test_cross_message_rule_and_history(self):
         first = self.send('Я Макетонов Тестимир.')
         self.assertFalse(first['verdict']['session_alert'])
-        self.assertTrue(first['verdict']['annotation_uncertain'])
+        self.assertFalse(first['verdict']['annotation_uncertain'])
+        self.assertEqual(first['verdict']['person_risks']['p1']['risk_score'],0.3)
         second = self.send('Моя личная почта testimir@example.invalid.')
         self.assertTrue(second['verdict']['session_alert'])
         self.assertEqual(second['verdict']['first_alert_message_id'],2)
         self.assertEqual(second['verdict']['first_alert_reason'],'combination_rule')
         self.assertFalse(second['verdict']['annotation_uncertain'])
-        self.assertTrue(second['verdict']['annotation_uncertain_ever'])
+        self.assertFalse(second['verdict']['annotation_uncertain_ever'])
         self.send('Спасибо.')
         self.assertEqual(len(self.ner.calls),3)
         self.assertEqual(self.ner.calls[1],'Моя личная почта testimir@example.invalid.')
         self.assertEqual(self.state['verdict']['first_alert_message_id'],2)
         history = self.client.get('/v1/sessions/synthetic').json()['message_history']
-        self.assertEqual([m['annotation_uncertain'] for m in history],[True,False,False])
+        self.assertEqual([m['annotation_uncertain'] for m in history],[False,False,False])
 
     def test_unknown_contacts_do_not_form_person(self):
         self.app.state.service.pipeline.linker = Linker(None)
-        result = self.send('Общий телефон +7 (000) 000-00-01, почта testimir@example.invalid.')
-        self.assertFalse(result['verdict']['session_alert'])
+        result = self.send('В записи телефон +7 (000) 000-00-01, почта testimir@example.invalid.')
+        self.assertTrue(result['verdict']['session_alert'])
+        self.assertEqual(result['verdict']['first_alert_reason'],'score_rule')
+        self.assertEqual(result['verdict']['unknown_risk']['rules'],['score_rule'])
         self.assertTrue(result['verdict']['coverage_complete'])
         self.assertFalse(result['verdict']['annotation_uncertain'])
         self.assertTrue(all(e['person_id'] is None for e in result['entities']))
+
+    def test_service_contacts_are_excluded_from_unknown_score(self):
+        class ServiceLinker:
+            def link(self, message, candidates, known_facts):
+                return LinkResult(tuple(None for _ in candidates),
+                                  service_contacts=tuple(True for _ in candidates))
+        self.app.state.service.pipeline.linker = ServiceLinker()
+        result = self.send('Общий телефон +7 (000) 000-00-01, почта testimir@example.invalid.')
+        self.assertFalse(result['verdict']['session_alert'])
+        self.assertEqual(result['verdict']['unknown_risk']['risk_score'],0.0)
 
     def test_unknown_owner_red_still_alerts(self):
         self.app.state.service.pipeline.linker = Linker(None)

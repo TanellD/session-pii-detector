@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 EntityType = Literal['first_name', 'last_name', 'patronymic', 'sex', 'age',
                      'geography', 'occupation', 'organization', 'phone', 'email',
                      'address', 'passport', 'snils', 'individual_inn', 'bank_card']
-Rule = Literal['red_rule', 'combination_rule', 'candidate_count_rule']
+Rule = Literal['red_rule', 'combination_rule', 'candidate_count_rule', 'score_rule']
 
 
 class Model(BaseModel):
@@ -49,6 +49,14 @@ class Candidate(Span):
 class Entity(Candidate):
     id: str
     person_id: str | None
+    service_contact: bool = False
+
+
+class RiskAssessment(Model):
+    risk_score: float | None
+    threshold: float
+    missing_weights: tuple[str, ...] = ()
+    rules: tuple[Rule, ...] = ()
 
 
 class Verdict(Model):
@@ -62,6 +70,8 @@ class Verdict(Model):
     coverage_complete: bool = True
     incomplete_reasons: tuple[str, ...] = ()
     candidate_counts: dict[str, float | None] = Field(default_factory=dict)
+    person_risks: dict[str, RiskAssessment] = Field(default_factory=dict)
+    unknown_risk: RiskAssessment | None = None
 
 
 class Snapshot(Model):

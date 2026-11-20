@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -r requirements-service.lock.txt \
 
 COPY src/session_pii ./src/session_pii
 COPY configs/annotation-estimator-policy.json ./configs/annotation-estimator-policy.json
+COPY configs/runtime-risk-policy.json ./configs/runtime-risk-policy.json
 COPY tools/annotation_calculator.py tools/annotation_contract.py tools/estimate_occupation_candidates.py ./tools/
 
 USER 10001

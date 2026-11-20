@@ -27,6 +27,8 @@
 
 ## Исследование
 
+- [Суммарный риск по людям и неизвестным фактам](experiments/2026-11-20-runtime-risk.md)
+
 - [Проверка сборки HTTP-каркаса в Docker](experiments/2026-11-20-service-scaffold.md)
 
 - [Сто синтетических сессий: уточнённая инструкция и последовательная Gemma](experiments/2026-11-19-annotation-100-gemma.md)

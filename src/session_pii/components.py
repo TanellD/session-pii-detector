@@ -12,6 +12,7 @@ class Fact:
     person_id: str | None
     entity_id: str
     message_id: int
+    service_contact: bool = False
 
 
 @dataclass(frozen=True)
@@ -27,6 +28,8 @@ class LinkResult:
     person_ids: tuple[str | None, ...]
     complete: bool = True
     reasons: tuple[str, ...] = ()
+    # Необязательно: маска служебных phone/email, исключаемых из риска.
+    service_contacts: tuple[bool, ...] = ()
 
 
 class Detector(Protocol):
