@@ -80,11 +80,11 @@ PATTERNS = [
 ]
 
 
-def predict(text):
+def predict(text, require_valid_checksum=True):
     result = []
     for kind, pattern, validator in PATTERNS:
         for match in pattern.finditer(text):
-            if validator is None or validator(match.group("value")):
+            if not require_valid_checksum or validator is None or validator(match.group("value")):
                 result.append(
                     {
                         "type": kind,

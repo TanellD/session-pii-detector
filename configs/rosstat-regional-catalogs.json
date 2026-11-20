@@ -1,0 +1,526 @@
+{
+  "checked_on": "2026-11-15",
+  "scope": "Сайты из официального каталога Росстата; наличие ссылки не подтверждает полноту статистики.",
+  "catalogs": [
+    {
+      "provider_url": "https://02.rosstat.gov.ru",
+      "publication_url": "https://02.rosstat.gov.ru/folder/49063",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://03.rosstat.gov.ru",
+      "publication_url": "https://03.rosstat.gov.ru/vpn2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://05.rosstat.gov.ru",
+      "publication_url": "https://05.rosstat.gov.ru/itogi",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://10.rosstat.gov.ru",
+      "publication_url": "https://10.rosstat.gov.ru/folder/69829",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://11.rosstat.gov.ru",
+      "publication_url": "https://11.rosstat.gov.ru/vpn2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://12.rosstat.gov.ru",
+      "publication_url": "https://12.rosstat.gov.ru/folder/64532",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://13.rosstat.gov.ru",
+      "publication_url": "https://13.rosstat.gov.ru/folder/27964",
+      "kind": "population_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://14.rosstat.gov.ru",
+      "publication_url": "https://14.rosstat.gov.ru/folder/179476",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://16.rosstat.gov.ru",
+      "publication_url": "https://16.rosstat.gov.ru/vpn2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://18.rosstat.gov.ru",
+      "publication_url": "https://18.rosstat.gov.ru/folder/184972",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://21.rosstat.gov.ru",
+      "publication_url": "https://21.rosstat.gov.ru/folder/215059",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://22.rosstat.gov.ru",
+      "publication_url": "https://22.rosstat.gov.ru/folder/33031",
+      "kind": "municipal_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://23.rosstat.gov.ru",
+      "publication_url": "https://23.rosstat.gov.ru/vpn2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://24.rosstat.gov.ru",
+      "publication_url": "https://24.rosstat.gov.ru/folder/66693",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://26.rosstat.gov.ru",
+      "publication_url": "https://26.rosstat.gov.ru/folder/77775",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://27.rosstat.gov.ru",
+      "publication_url": "https://27.rosstat.gov.ru/folder/146164",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://28.rosstat.gov.ru",
+      "publication_url": "https://28.rosstat.gov.ru/folder/64793",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://29.rosstat.gov.ru",
+      "publication_url": "https://29.rosstat.gov.ru/main_indicators",
+      "kind": "municipal_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://30.rosstat.gov.ru",
+      "publication_url": "https://30.rosstat.gov.ru/vpn-2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://31.rosstat.gov.ru",
+      "publication_url": "https://31.rosstat.gov.ru/folder/186308",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://32.rosstat.gov.ru",
+      "publication_url": "https://32.rosstat.gov.ru/folder/60792",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://33.rosstat.gov.ru",
+      "publication_url": "https://33.rosstat.gov.ru/main_indicators",
+      "kind": "municipal_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://34.rosstat.gov.ru",
+      "publication_url": "https://34.rosstat.gov.ru/folder/63878",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://35.rosstat.gov.ru",
+      "publication_url": "https://35.rosstat.gov.ru/folder/58468",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://36.rosstat.gov.ru",
+      "publication_url": "https://36.rosstat.gov.ru/folder/77095",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://37.rosstat.gov.ru",
+      "publication_url": "https://37.rosstat.gov.ru/folder/61611",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://38.rosstat.gov.ru",
+      "publication_url": "https://38.rosstat.gov.ru/folder/55120",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://39.rosstat.gov.ru",
+      "publication_url": "https://39.rosstat.gov.ru/National_Population_Census_2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://40.rosstat.gov.ru",
+      "publication_url": "https://40.rosstat.gov.ru/folder/65144",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://41.rosstat.gov.ru",
+      "publication_url": "https://41.rosstat.gov.ru/vpn2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://42.rosstat.gov.ru",
+      "publication_url": "https://service.kemerovostat.gks.ru/bgd/EJEGOD/issWWW.exe/Stg/2022/4.%20%D0%BD%D0%B0%D1%81%D0%B5%D0%BB%D0%B5%D0%BD%D0%B8%D0%B5.htm",
+      "kind": "population_archive",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://43.rosstat.gov.ru",
+      "publication_url": "https://43.rosstat.gov.ru/vpn2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://44.rosstat.gov.ru",
+      "publication_url": "https://44.rosstat.gov.ru/news-VPN-2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://46.rosstat.gov.ru",
+      "publication_url": "https://46.rosstat.gov.ru/census_2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://48.rosstat.gov.ru",
+      "publication_url": "https://48.rosstat.gov.ru/national_census_2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://51.rosstat.gov.ru",
+      "publication_url": "https://51.rosstat.gov.ru/folder/72884",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://52.rosstat.gov.ru",
+      "publication_url": "https://52.rosstat.gov.ru/folder/62175",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://53.rosstat.gov.ru",
+      "publication_url": "https://53.rosstat.gov.ru/vpn_2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://54.rosstat.gov.ru",
+      "publication_url": "https://54.rosstat.gov.ru/folder/31729",
+      "kind": "population_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://55.rosstat.gov.ru",
+      "publication_url": "https://55.rosstat.gov.ru/vpn-2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://56.rosstat.gov.ru",
+      "publication_url": "https://56.rosstat.gov.ru/folder/61188",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://57.rosstat.gov.ru",
+      "publication_url": "https://57.rosstat.gov.ru/vpn2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://58.rosstat.gov.ru",
+      "publication_url": "https://58.rosstat.gov.ru/Censuses",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://59.rosstat.gov.ru",
+      "publication_url": "https://59.rosstat.gov.ru/folder/45394",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://60.rosstat.gov.ru",
+      "publication_url": "https://60.rosstat.gov.ru/vpn2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://61.rosstat.gov.ru",
+      "publication_url": "https://61.rosstat.gov.ru//folder/57001",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://62.rosstat.gov.ru",
+      "publication_url": "https://62.rosstat.gov.ru/vpn2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://63.rosstat.gov.ru",
+      "publication_url": "https://63.rosstat.gov.ru/folder/54262",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://64.rosstat.gov.ru",
+      "publication_url": "https://64.rosstat.gov.ru/VPN2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://65.rosstat.gov.ru",
+      "publication_url": "https://65.rosstat.gov.ru/folder/56834",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://66.rosstat.gov.ru",
+      "publication_url": "https://66.rosstat.gov.ru/folder/71852",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://67.rosstat.gov.ru",
+      "publication_url": "https://67.rosstat.gov.ru/folder/63315",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://68.rosstat.gov.ru",
+      "publication_url": "https://68.rosstat.gov.ru/folder/181463",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://69.rosstat.gov.ru",
+      "publication_url": "https://69.rosstat.gov.ru/folder/59058",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://70.rosstat.gov.ru",
+      "publication_url": "https://70.rosstat.gov.ru/VPN2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://71.rosstat.gov.ru",
+      "publication_url": "https://71.rosstat.gov.ru/folder/42164",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://72.rosstat.gov.ru",
+      "publication_url": "https://72.rosstat.gov.ru/perepis_nas2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://73.rosstat.gov.ru",
+      "publication_url": "https://73.rosstat.gov.ru/folder/40275",
+      "kind": "population_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://74.rosstat.gov.ru",
+      "publication_url": "https://74.rosstat.gov.ru/national_census_2020",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://75.rosstat.gov.ru",
+      "publication_url": "https://75.rosstat.gov.ru/folder/48798",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://76.rosstat.gov.ru",
+      "publication_url": "https://76.rosstat.gov.ru/storage/mediabank/tom_2_chislennost_i_razmeshchenie_naseleniya_yaroslavskoy_oblasti.pdf",
+      "kind": "census_pdf",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://77.rosstat.gov.ru",
+      "publication_url": "https://77.rosstat.gov.ru/folder/210976",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://78.rosstat.gov.ru",
+      "publication_url": "https://78.rosstat.gov.ru/folder/27595",
+      "kind": "population_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://82.rosstat.gov.ru",
+      "publication_url": "https://82.rosstat.gov.ru/folder/39960",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    },
+    {
+      "provider_url": "https://95.rosstat.gov.ru",
+      "publication_url": "https://95.rosstat.gov.ru/folder/63642",
+      "kind": "census_catalog",
+      "evidence": "indexed_official_publication",
+      "file_checked": false,
+      "checked_on": "2026-11-15"
+    }
+  ]
+}

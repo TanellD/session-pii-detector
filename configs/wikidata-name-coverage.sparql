@@ -1,0 +1,32 @@
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX schema: <http://schema.org/>
+
+# Проверка покрытия, не случайная выборка населения.
+# Только российское гражданство и статья в русскоязычной Википедии.
+# Возвращаются исключительно счётчики, без идентификаторов и имён людей.
+SELECT
+  (COUNT(*) AS ?sampledPeople)
+  (SUM(IF(?hasGiven, 1, 0)) AS ?withGivenName)
+  (SUM(IF(?hasFamily, 1, 0)) AS ?withFamilyName)
+  (SUM(IF(?hasPatronym, 1, 0)) AS ?withExplicitPatronym)
+  (SUM(IF(?hasFather, 1, 0)) AS ?withFatherLink)
+  (SUM(IF(?hasFatherGiven, 1, 0)) AS ?withFatherGivenName)
+  (SUM(IF(?hasGiven && ?hasFamily && ?hasPatronym, 1, 0)) AS ?withAllThreeProperties)
+  (SUM(IF(?hasDeathDate, 1, 0)) AS ?withRecordedDeathDate)
+WHERE {
+  {
+    SELECT DISTINCT ?person WHERE {
+      ?person wdt:P31 wd:Q5; wdt:P27 wd:Q159.
+      ?article schema:about ?person; schema:isPartOf <https://ru.wikipedia.org/>.
+    }
+    ORDER BY ?person
+    LIMIT 500
+  }
+  BIND(EXISTS { ?person wdt:P735 ?given } AS ?hasGiven)
+  BIND(EXISTS { ?person wdt:P734 ?family } AS ?hasFamily)
+  BIND(EXISTS { ?person wdt:P5056 ?patronym } AS ?hasPatronym)
+  BIND(EXISTS { ?person wdt:P22 ?father } AS ?hasFather)
+  BIND(EXISTS { ?person wdt:P22/wdt:P735 ?fatherGiven } AS ?hasFatherGiven)
+  BIND(EXISTS { ?person wdt:P570 ?death } AS ?hasDeathDate)
+}
