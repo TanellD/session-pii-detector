@@ -1,0 +1,73 @@
+{
+    "synthetic": true,
+    "contract_version": "1.0.0",
+    "purpose": "transformation check only; no t_gold",
+    "cases": [
+        {
+            "id": "full_name",
+            "text": "Меня зовут Лада Олеговна Макетова.",
+            "transformation_hint": [
+                "FIRST_NAME",
+                "PATRONYMIC",
+                "LAST_NAME"
+            ],
+            "requires": "model"
+        },
+        {
+            "id": "surname",
+            "text": "Моя фамилия Макетова.",
+            "transformation_hint": [
+                "LAST_NAME"
+            ],
+            "requires": "model"
+        },
+        {
+            "id": "patronymic",
+            "text": "Моё отчество Олеговна.",
+            "transformation_hint": [
+                "PATRONYMIC"
+            ],
+            "requires": "model"
+        },
+        {
+            "id": "email",
+            "text": "Пишите на lada@example.com.",
+            "transformation_hint": [
+                "EMAIL"
+            ],
+            "requires": "regex"
+        },
+        {
+            "id": "inn_phone_conflict",
+            "text": "Тестовый ИНН: 000000123411.",
+            "transformation_hint": [
+                "INN"
+            ],
+            "requires": "regex"
+        },
+        {
+            "id": "organization",
+            "text": "Я работаю в ООО \"Макет\".",
+            "transformation_hint": [
+                "ORGANIZATION"
+            ],
+            "requires": "regex"
+        },
+        {
+            "id": "age",
+            "text": "Мне 34 года.",
+            "transformation_hint": [
+                "AGE"
+            ],
+            "requires": "model"
+        },
+        {
+            "id": "birth_date",
+            "text": "Дата моего рождения — 14.02.1991.",
+            "transformation_hint": [
+                "DATE_OF_BIRTH"
+            ],
+            "requires": "model"
+        }
+    ]
+}
