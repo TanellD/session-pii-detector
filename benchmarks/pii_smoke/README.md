@@ -84,3 +84,35 @@ nearest-rank по всем повторам. Загрузка и прогрев 
 Это не HTTP-латенси и не нагрузочный тест. Совпадение скорости на другом железе
 не обещается. Повторы должны давать одинаковые predictions, иначе run завершается
 ошибкой. Межтиповые конфликты сохранены как свойство исследуемого baseline.
+
+## Пробный прогон адаптера
+
+Проверка преобразования меток, границ и стабильности полей контракта выполняется
+на синтетическом наборе без `t_gold`:
+
+```powershell
+$env:PYTHONUTF8='1'
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.adapter_check
+```
+
+Эта проверка не запускает модель, не измеряет сессионный F2 и не является blind test.
+Она проверяет только output-контракт и разборы правил адаптера.
+
+## Проверка адаптера
+
+Без модели (regex-only; кейсы `requires: model` пропускаются):
+
+```powershell
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.adapter_check `
+  --output runs/adapter-check/regex-only.json
+```
+
+С моделью (после `prepare.py`):
+
+```powershell
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.adapter_check `
+  --with-model `
+  --output runs/adapter-check/with-model.json
+```
+
+При расхождениях — exit code 1 и список `failures` в JSON.
