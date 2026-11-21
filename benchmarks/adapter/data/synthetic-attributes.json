@@ -1,0 +1,256 @@
+{
+  "synthetic": true,
+  "contract_version": "1.0.0",
+  "purpose": "transformation check only; no t_gold",
+  "cases": [
+    {
+      "id": "full_name",
+      "text": "Меня зовут Лада Олеговна Макетова.",
+      "transformation_hint": ["FIRST_NAME", "PATRONYMIC", "LAST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "surname",
+      "text": "Моя фамилия Макетова.",
+      "transformation_hint": ["LAST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "patronymic",
+      "text": "Моё отчество Олеговна.",
+      "transformation_hint": ["PATRONYMIC"],
+      "requires": "model"
+    },
+    {
+      "id": "email",
+      "text": "Пишите на lada@example.com.",
+      "transformation_hint": ["EMAIL"],
+      "requires": "regex"
+    },
+    {
+      "id": "inn_phone_conflict",
+      "text": "Тестовый ИНН: 000000123411.",
+      "transformation_hint": ["INN"],
+      "requires": "regex"
+    },
+    {
+      "id": "organization",
+      "text": "Я работаю в ООО \"Макет\".",
+      "transformation_hint": ["ORGANIZATION"],
+      "requires": "regex"
+    },
+    {
+      "id": "age",
+      "text": "Мне 34 года.",
+      "transformation_hint": ["AGE"],
+      "requires": "model"
+    },
+    {
+      "id": "birth_date",
+      "text": "Дата моего рождения — 14.02.1991.",
+      "transformation_hint": ["DATE_OF_BIRTH"],
+      "expect_age_at_least": 30,
+      "requires": "model"
+    },
+    {
+      "id": "fio_sfm_common",
+      "text": "Менеджер Петров Иван Иванович передал документы.",
+      "transformation_hint": ["OCCUPATION", "LAST_NAME", "FIRST_NAME", "PATRONYMIC"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_fms_reversed",
+      "text": "Форму подписала Светлана Николаевна Иванова.",
+      "transformation_hint": ["FIRST_NAME", "PATRONYMIC", "LAST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_fs_two_words",
+      "text": "Анна Петрова позвонит завтра утром.",
+      "transformation_hint": ["FIRST_NAME", "LAST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_sf_surname_first",
+      "text": "Обратитесь к Смирновой Ольге, она ведёт этот договор.",
+      "transformation_hint": ["LAST_NAME", "FIRST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_initials_sFM",
+      "text": "Заявление оформлено на Иванова И.И.",
+      "transformation_hint": ["LAST_NAME", "FIRST_NAME", "PATRONYMIC"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_initials_FMs",
+      "text": "А. И. Петрова уже подтвердила заказ.",
+      "transformation_hint": ["FIRST_NAME", "PATRONYMIC", "LAST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_initials_partial",
+      "text": "Свяжитесь с Соколовой А., она на смене.",
+      "transformation_hint": ["LAST_NAME", "FIRST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_first_middle_no_surname",
+      "text": "Иван Иванович пообещал прислать акт до вечера.",
+      "transformation_hint": ["FIRST_NAME", "PATRONYMIC"],
+      "requires": "model"
+    },
+    {
+      "id": "single_surname",
+      "text": "Менеджер Волкова связалась с нами.",
+      "transformation_hint": ["OCCUPATION", "LAST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "single_firstname",
+      "text": "Меня зовут Мария, чем могу помочь?",
+      "transformation_hint": ["FIRST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "single_patronymic_standalone",
+      "text": "Иванович, вам передать заявку?",
+      "transformation_hint": ["PATRONYMIC"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_official_form",
+      "text": "ФИО: Смирнов Пётр Александрович.",
+      "transformation_hint": ["LAST_NAME", "FIRST_NAME", "PATRONYMIC"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_double_surname",
+      "text": "Курьер Ржевская-Петрова Анна Николаевна подъедет к 15:00.",
+      "transformation_hint": ["OCCUPATION", "LAST_NAME", "FIRST_NAME", "PATRONYMIC"],
+      "requires": "model"
+    },
+    {
+      "id": "surname_context_two_values",
+      "text": "Фамилия Соколова, имя Ольга.",
+      "transformation_hint": ["LAST_NAME", "FIRST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_with_title",
+      "text": "Г-н Смирнов оставил заявку на возврат.",
+      "transformation_hint": ["OCCUPATION", "LAST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_two_persons",
+      "text": "Иван Петров передал заявку Ольге Смирновой.",
+      "transformation_hint": ["FIRST_NAME", "LAST_NAME", "FIRST_NAME", "LAST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "pronoun_suppressed",
+      "text": "Он вчера уже позвонил по этому вопросу.",
+      "transformation_hint": [],
+      "requires": "model"
+    },
+    {
+      "id": "possessive_suppressed",
+      "text": "Её заявку одобрили без правок.",
+      "transformation_hint": [],
+      "requires": "model"
+    },
+    {
+      "id": "fio_plus_email",
+      "text": "Иван Петров написал с почты ivan.petrov@example.com.",
+      "transformation_hint": ["FIRST_NAME", "LAST_NAME", "EMAIL"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_plus_inn_phone",
+      "text": "Ринат Ахметович Нигматуллин, ИНН 000000123411, телефон +7 495 000-00-00.",
+      "transformation_hint": ["LAST_NAME", "FIRST_NAME", "PATRONYMIC", "INN", "PHONE"],
+      "requires": "model"
+    },
+    {
+      "id": "phone_in_text",
+      "text": "Перезвоните по номеру +7 926 123-45-67 после пяти.",
+      "transformation_hint": ["PHONE"],
+      "requires": "regex"
+    },
+    {
+      "id": "fio_after_organization",
+      "text": "Директор ООО \"Макет\" Иванов Иван Иванович подпишет договор.",
+      "transformation_hint": ["OCCUPATION", "ORGANIZATION", "LAST_NAME", "FIRST_NAME", "PATRONYMIC"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_no_final_punct",
+      "text": "Петрова Анна Викторовна из отдела кадров перезвонит",
+      "transformation_hint": ["LAST_NAME", "FIRST_NAME", "PATRONYMIC"],
+      "requires": "model"
+    },
+    {
+      "id": "fio_lowercase_context",
+      "text": "меня зовут ольга викторовна петрова",
+      "transformation_hint": ["FIRST_NAME", "PATRONYMIC", "LAST_NAME"],
+      "requires": "model"
+    },
+    {
+      "id": "service_email_domain",
+      "text": "По вопросам доставки пишите на support@company-mail.ru.",
+      "transformation_hint": ["SERVICE_EMAIL"],
+      "requires": "regex"
+    },
+    {
+      "id": "service_email_local_part",
+      "text": "Претензии принимаются на office@shop-express.ru до конца недели.",
+      "transformation_hint": ["SERVICE_EMAIL"],
+      "requires": "regex"
+    },
+    {
+      "id": "birth_date",
+      "text": "Дата моего рождения — 14.02.1991.",
+      "transformation_hint": ["DATE_OF_BIRTH"],
+      "expect_age_at_least": 30,
+      "requires": "model"
+    },
+    {
+      "id": "birth_date_recent",
+      "text": "Дочка родилась 20.10.2025.",
+      "transformation_hint": ["RELATIONSHIP", "DATE_OF_BIRTH"],
+      "expect_age_at_most": 2,
+      "requires": "model"
+    },
+    {
+      "id": "addr_full_chain",
+      "text": "Адрес доставки: г. Москва, ул. Тверская, д. 12, кв. 5.",
+      "transformation_hint": ["ADDRESS"],
+      "requires": "model"
+    },
+    {
+      "id": "addr_index_first",
+      "text": "123456, Москва, улица Тверская, дом 12",
+      "transformation_hint": ["ADDRESS"],
+      "requires": "model"
+    },
+    {
+      "id": "addr_city_street_number",
+      "text": "Живу в Казани, улица Баумана, 15А",
+      "transformation_hint": ["ADDRESS"],
+      "requires": "model"
+    },
+    {
+      "id": "addr_street_first",
+      "text": "Склад: пр-т Мира, 24А, корп. 2, Москва, 101000",
+      "transformation_hint": ["ADDRESS"],
+      "requires": "model"
+    },
+    {
+      "id": "addr_unabbreviated",
+      "text": "Офис по адресу: Санкт-Петербург, Невский проспект, 28",
+      "transformation_hint": ["ADDRESS"],
+      "requires": "model"
+    }
+  ]
+}

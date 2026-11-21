@@ -17,6 +17,7 @@ class Mention:
     confidence_kind: str
     source: str
     detector_version: str
+    attributes: dict | None = None
 
     def to_dict(self):
         return asdict(self)
@@ -32,6 +33,7 @@ def make_mention(
     confidence_kind: str,
     source: str,
     detector_version: str,
+    attributes: dict | None = None,
 ) -> Mention:
     if source not in {"regex", "gliner"}:
         raise ValueError(f"Unknown mention source: {source}")
@@ -53,4 +55,5 @@ def make_mention(
         confidence_kind=confidence_kind,
         source=source,
         detector_version=detector_version,
+        attributes=attributes,
     )

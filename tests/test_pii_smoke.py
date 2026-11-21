@@ -5,8 +5,6 @@ import hashlib
 import json
 import unittest
 
-from benchmarks.pii_smoke.adapter import extract
-from benchmarks.pii_smoke.adapter_contract import CONTRACT_VERSION
 from benchmarks.pii_smoke.dataset import build
 from benchmarks.pii_smoke.evaluate import counts
 from benchmarks.pii_smoke.regex_detector import (
@@ -105,64 +103,6 @@ class SmokeChecks(unittest.TestCase):
         ]
         self.assertEqual(len(merge(rules, neural)), 2)
         self.assertEqual(rules, before)
-
-    def test_adapter_contract_and_stable_ids(self):
-        message = "Пишите на lada@example.com."
-        first = extract(message)
-        second = extract(message)
-        self.assertEqual(first, second)
-        self.assertEqual(len(first), 1)
-        mention = first[0]
-        self.assertEqual(mention.type, "EMAIL")
-        self.assertEqual(mention.text, "lada@example.com")
-        self.assertEqual(mention.confidence, None)
-        self.assertEqual(mention.confidence_kind, "none")
-        self.assertEqual(mention.source, "regex")
-
-    def test_adapter_full_name_rules_and_inn_priority(self):
-        text = "Меня зовут Лада Олеговна Макетова."
-        value = "Лада Олеговна Макетова"
-        start = text.index(value)
-        full = extract(
-            text,
-            gliner_entities=[
-                {
-                    "label": "person",
-                    "start": start,
-                    "end": start + len(value),
-                    "score": 0.9,
-                }
-            ],
-        )
-        self.assertEqual(
-            [m.type for m in full], ["FIRST_NAME", "PATRONYMIC", "LAST_NAME"]
-        )
-        inn = extract("Тестовый ИНН: 000000123411.")
-        self.assertEqual([m.type for m in inn], ["INN"])
-
-    def test_person_on_pronoun_suppressed(self):
-        text = 'Я работаю в ООО "Макет".'
-        mentions = extract(
-            text,
-            gliner_entities=[
-                {"label": "person", "start": 0, "end": 1, "score": 0.78},
-            ],
-        )
-        types = [m.type for m in mentions]
-        self.assertNotIn("PERSON", types)
-        self.assertIn("ORGANIZATION", types)
-        org = next(m for m in mentions if m.type == "ORGANIZATION")
-        self.assertEqual(org.source, "regex")
-        self.assertEqual(org.confidence_kind, "none")
-
-    def test_synthetic_attributes_has_no_t_gold(self):
-        with open(
-            "benchmarks/pii_smoke/data/synthetic-attributes.json", encoding="utf-8"
-        ) as fixture_file:
-            fixture = json.load(fixture_file)
-        self.assertTrue(fixture["synthetic"])
-        self.assertEqual(fixture["contract_version"], CONTRACT_VERSION)
-        self.assertNotIn("t_gold", fixture)
 
 
 if __name__ == "__main__":

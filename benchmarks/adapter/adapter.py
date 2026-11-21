@@ -1,27 +1,20 @@
 """Single-message regex + GLiNER adapter."""
 
-import hashlib
 import json
 from pathlib import Path
 
 from .adapter_contract import make_mention
 from .adapter_rules import RULES_VERSION, apply_rules
-from .regex_detector import predict
-
-
-def config_sha256(config_path=Path("benchmarks/pii_smoke/config.json")):
-    return hashlib.sha256(config_path.read_bytes()).hexdigest()
+from benchmarks.pii_smoke.regex_detector import predict
 
 
 def _detector_version(config):
     if config:
-        revision = config.get("revision", "unknown")
-        return f'{config.get("model", "gliner")}@{revision}'
+        return f'{config.get("model", "gliner")}@{config.get("revision", "unknown")}'
     return RULES_VERSION
 
 
 def extract(message: str, gliner_entities=None, config=None, detector_version=None):
-    """Extract mentions from one message without session/history state."""
     if not isinstance(message, str):
         raise TypeError("message must be a string")
 
@@ -72,6 +65,7 @@ def extract(message: str, gliner_entities=None, config=None, detector_version=No
                 confidence_kind=confidence_kind,
                 source=source,
                 detector_version=version,
+                attributes=entity.get("attributes"),
             )
         )
     return mentions

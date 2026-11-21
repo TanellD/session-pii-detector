@@ -5,7 +5,7 @@
 
 ## Вход
 
-Файл `../../benchmarks/pii_smoke/data/synthetic-attributes.json` содержит сообщения
+Файл `../../benchmarks/adapter/data/synthetic-attributes.json` содержит сообщения
 и аннотации преобразования для тестовой проверки. Все имена, адреса и номера
 вымышленные или диагностические.
 
@@ -36,10 +36,16 @@ adapter-разборов. Он не является разметкой сесс
 - `"model"` — без `--with-model` кейс пропускается (`skipped`), чтобы не давать
   ложный failure; с `--with-model` проверяется.
 
+Фикстура v2 включает модели ФИО с russiannames и контекстом, организации с моделями
+названий, местоимения, merge адреса, служебные email и вычисление возраста по ДР.
+Кейсы с ДР могут дополнительно проверять `attributes.age`, но не требуют нормализации
+самой даты.
+
 ## Выход
 
 Проверка выводит JSON-сериализуемые Mention поля: `id`, `type`, `text`, `start/end`,
-`confidence`, `confidence_kind`, `source`, `detector_version`.
+`confidence`, `confidence_kind`, `source`, `detector_version` и необязательное поле
+`attributes` для дополнительных диагностических данных.
 
 ## Ограничения
 

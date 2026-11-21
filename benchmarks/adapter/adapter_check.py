@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .adapter import extract
 
-FIXTURE = Path("benchmarks/pii_smoke/data/synthetic-attributes.json")
+FIXTURE = Path("benchmarks/adapter/data/synthetic-attributes.json")
 
 
 def _extract(case_text, with_model):
@@ -24,8 +24,7 @@ def check(fixture_path=FIXTURE, with_model=False):
     if "t_gold" in payload:
         raise ValueError("Adapter fixture must not contain t_gold")
 
-    failures = []
-    results = []
+    failures, results = [], []
     for case in payload["cases"]:
         requires = case.get("requires", "any")
         if requires == "model" and not with_model:
@@ -34,7 +33,6 @@ def check(fixture_path=FIXTURE, with_model=False):
         text = case["text"]
         mentions = _extract(text, with_model)
         got_types = [m.type for m in mentions]
-
         for m in mentions:
             if not 0 <= m.start < m.end <= len(text):
                 failures.append(
@@ -42,16 +40,21 @@ def check(fixture_path=FIXTURE, with_model=False):
                 )
             if m.text != text[m.start : m.end]:
                 failures.append(f"{case['id']}: text mismatch for {m.type}")
-
         expected = case.get("transformation_hint", [])
         if expected and sorted(got_types) != sorted(expected):
             failures.append(f"{case['id']}: expected {expected}, got {got_types}")
+        if "expect_age_at_least" in case:
+            ages = [m.attributes.get("age") for m in mentions if m.attributes]
+            if not ages or any(age < case["expect_age_at_least"] for age in ages):
+                failures.append(f"{case['id']}: age_at_least check failed")
+        if "expect_age_at_most" in case:
+            ages = [m.attributes.get("age") for m in mentions if m.attributes]
+            if not ages or any(age > case["expect_age_at_most"] for age in ages):
+                failures.append(f"{case['id']}: age_at_most check failed")
 
-        # Stable ID: same input twice → same IDs
         again = _extract(text, with_model)
         if [m.id for m in mentions] != [m.id for m in again]:
             failures.append(f"{case['id']}: unstable mention IDs between runs")
-
         results.append(
             {
                 "id": case["id"],
@@ -76,17 +79,14 @@ def main():
     parser.add_argument("--output", type=Path)
     parser.add_argument("--with-model", action="store_true")
     args = parser.parse_args()
-
-    report = check(args.input, with_model=args.with_model)
+    report = check(args.input, args.with_model)
     payload = json.dumps(report, ensure_ascii=False, indent=2)
-
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(payload + "\n", encoding="utf-8")
         print(args.output)
     else:
         print(payload)
-
     if not report["ok"]:
         raise SystemExit(1)
 

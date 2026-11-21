@@ -20,6 +20,7 @@
 - [Нормализация упоминаний](kb/normalization.md)
 - [Контракт упоминания адаптера](research/notes/mention-contract.md)
 - [Архитектура адаптера](research/notes/adapter-design.md)
+- [Покрытие и ограничения адаптера v2](research/notes/adapter-coverage.md)
 - [Открытые вопросы перед замером метрик](project/metrics-open-questions.md)
 - [Проект ТЗ на разметку для метрик](data/metrics-annotation-requirements.md)
 - [Бюджет латенси](kb/latency-budget.md)

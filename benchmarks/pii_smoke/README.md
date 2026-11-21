@@ -87,32 +87,10 @@ nearest-rank по всем повторам. Загрузка и прогрев 
 
 ## Пробный прогон адаптера
 
-Проверка преобразования меток, границ и стабильности полей контракта выполняется
-на синтетическом наборе без `t_gold`:
+Проверка адаптера вынесена в отдельный пакет `benchmarks/adapter/`.
+Команды приведены в его документации:
 
 ```powershell
-$env:PYTHONUTF8='1'
-.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.adapter_check
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.adapter.adapter_check --output runs/adapter-check/regex-only.json
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.adapter.adapter_check --with-model --output runs/adapter-check/with-model.json
 ```
-
-Эта проверка не запускает модель, не измеряет сессионный F2 и не является blind test.
-Она проверяет только output-контракт и разборы правил адаптера.
-
-## Проверка адаптера
-
-Без модели (regex-only; кейсы `requires: model` пропускаются):
-
-```powershell
-.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.adapter_check `
-  --output runs/adapter-check/regex-only.json
-```
-
-С моделью (после `prepare.py`):
-
-```powershell
-.\.venv-task12-locked\Scripts\python.exe -m benchmarks.pii_smoke.adapter_check `
-  --with-model `
-  --output runs/adapter-check/with-model.json
-```
-
-При расхождениях — exit code 1 и список `failures` в JSON.
