@@ -91,16 +91,16 @@ python -X utf8 -m unittest discover -s tests -p test_session_alert_evaluation.py
 
 ## Повторный прогон v2
 
-Корпус `session-alerts-v2`, правила ревью `pr46-review-v1`, код
-`b38fcd94fb06f78fefe92e3e881c7d5f28aef83f`. Модель, конфиг извлечения и режим
+Корпус `session-alerts-v2`, схема `annotation-mvp-v2-review46`, правила
+`pr46-review-v1`, код `c8d5fd30877687c79d915aad4ab5e27b6fc1c07b`. Модель, конфиг извлечения и режим
 `policy_only` прежние. SHA-256 корпуса
-`9c82392548285a738809375e4da3bf23106c9abc826bf947ce6e8c084776905b`,
-эталона `b62b36a7f44fb17178699230843e6e02b87db07dd70662737be19206e0151d1c`.
+`8c6d7ba14fa8d80ee9333dd1ff4847075bc50f9b50e18bc8647dc4fa673d6d2d`,
+эталона `d16a6af805b90e7dad432b1ae9e9a75d8c49a0817dc894164ca51f8d4ab8d83b`.
 
 ```powershell
 python -X utf8 tools/prepare_session_corpus.py data/session-alerts-v2 --with-alerts
-python -X utf8 tools/run_session_baselines.py --corpus data/session-alerts-v2 --output runs/session-alerts-v2-pilot --model-dir outputs/task12-prepared-model
-python -X utf8 tools/evaluate_session_alerts.py --gold data/session-alerts-v2/gold.json --predictions runs/session-alerts-v2-pilot/predictions.json --output runs/session-alerts-v2-pilot/recalculated.json
+python -X utf8 tools/run_session_baselines.py --corpus data/session-alerts-v2 --output runs/session-alerts-v2-rechecked --model-dir outputs/task12-prepared-model
+python -X utf8 tools/evaluate_session_alerts.py --gold data/session-alerts-v2/gold.json --predictions runs/session-alerts-v2-rechecked/predictions.json --output runs/session-alerts-v2-rechecked/recalculated.json
 ```
 
 В расчёт вошли все 12 сессий test (5 положительных, 7 отрицательных).
@@ -118,7 +118,8 @@ F2-timely и F2-session совпали. Для всех верных алерт�
 - На test у адаптера 18 совпадений по границе и типу, 10 лишних спанов
   и 10 пропусков. Счётчики и спаны сохранены в `ner-diagnostics.json`.
 - В `dev-11` модель нашла имя и фамилию как два общих `PERSON`.
-- В `test-11` оба невалидных телефона отброшены. В `test-12` модель
+- В `test-11` ни один невалидный телефон не принят, включая номер с
+  лишней группой через дефис. В `test-12` модель
   выделила город, а неполный кандидат адреса был отброшен.
 
 Это локальная сверка авторской разметки. Ожидание для общего телефона
