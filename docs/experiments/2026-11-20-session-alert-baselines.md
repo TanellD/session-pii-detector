@@ -88,3 +88,39 @@ F2-session совпали. Для всех TP offset равен 0.
 ```powershell
 python -X utf8 -m unittest discover -s tests -p test_session_alert_evaluation.py
 ```
+
+## Повторный прогон v2
+
+Корпус `session-alerts-v2`, правила ревью `pr46-review-v1`, код
+`b38fcd94fb06f78fefe92e3e881c7d5f28aef83f`. Модель, конфиг извлечения и режим
+`policy_only` прежние. SHA-256 корпуса
+`9c82392548285a738809375e4da3bf23106c9abc826bf947ce6e8c084776905b`,
+эталона `b62b36a7f44fb17178699230843e6e02b87db07dd70662737be19206e0151d1c`.
+
+```powershell
+python -X utf8 tools/prepare_session_corpus.py data/session-alerts-v2 --with-alerts
+python -X utf8 tools/run_session_baselines.py --corpus data/session-alerts-v2 --output runs/session-alerts-v2-pilot --model-dir outputs/task12-prepared-model
+python -X utf8 tools/evaluate_session_alerts.py --gold data/session-alerts-v2/gold.json --predictions runs/session-alerts-v2-pilot/predictions.json --output runs/session-alerts-v2-pilot/recalculated.json
+```
+
+В расчёт вошли все 12 сессий test (5 положительных, 7 отрицательных).
+F2-timely и F2-session совпали. Для всех верных алертов offset равен 0.
+
+| Вход и стратегия | TP / FP / FN / TN | F2-timely | FP0 все отриц. | FP0 уверен. отриц. |
+|---|---|---:|---:|---:|
+| Эталон, одно сообщение | 3 / 0 / 2 / 7 | 0,652 | 0/7 | 0/2 |
+| Эталон, объединённые люди | 5 / 1 / 0 / 6 | 0,962 | 1/7 | 0/2 |
+| Эталон, по людям | 5 / 0 / 0 / 7 | 1,000 | 0/7 | 0/2 |
+| Regex + GLiNER, одно сообщение | 3 / 0 / 2 / 7 | 0,652 | 0/7 | 0/2 |
+| Regex + GLiNER, объединённые люди | 4 / 0 / 1 / 7 | 0,833 | 0/7 | 0/2 |
+| Regex + GLiNER, по людям | 4 / 0 / 1 / 7 | 0,833 | 0/7 | 0/2 |
+
+- На test у адаптера 18 совпадений по границе и типу, 10 лишних спанов
+  и 10 пропусков. Счётчики и спаны сохранены в `ner-diagnostics.json`.
+- В `dev-11` модель нашла имя и фамилию как два общих `PERSON`.
+- В `test-11` оба невалидных телефона отброшены. В `test-12` модель
+  выделила город, а неполный кандидат адреса был отброшен.
+
+Это локальная сверка авторской разметки. Ожидание для общего телефона
+не менялось ради результатов сервиса. Прогон через обновлённый сервис
+остаётся отдельной проверкой.
