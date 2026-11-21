@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 from annotation_calculator import Calculator, RED
-from annotation_contract import assess, validate
+from annotation_contract import validate
 from evaluate_session_alerts import evaluate
 from prepare_session_corpus import (
     BASE,
@@ -23,6 +23,13 @@ from prepare_session_corpus import (
     read,
     unique_index,
     write_json,
+)
+from session_alert_review import (
+    CORPUS_VERSION,
+    GENERIC_PERSON,
+    REVIEW_POLICY,
+    alert_steps,
+    validate_review_document,
 )
 
 sys.path.insert(0, str(ROOT))
@@ -52,6 +59,8 @@ PHONE = re.compile(r"(?:\+7|8)[ ()\d-]+")
 def load_corpus(directory):
     corpus_path = directory / "sessions.json"
     manifest, gold = read(directory / "manifest.json"), read(directory / "gold.json")
+    reviewed = manifest["version"] == CORPUS_VERSION
+    expected_review_policy = REVIEW_POLICY if reviewed else None
     if (
         digest(corpus_path) != manifest["sessions_sha256"]
         or manifest["sessions_sha256"] != gold["sessions_sha256"]
@@ -61,6 +70,8 @@ def load_corpus(directory):
         or gold["calculator_disagreements"]
         or gold["policy_sha256"] != digest(POLICY_PATH)
         or gold["calculator_mode"] != "policy_only"
+        or manifest.get("review_policy") != expected_review_policy
+        or gold.get("review_policy") != expected_review_policy
     ):
         raise ValueError("Corpus, gold or policy provenance is inconsistent")
     corpus = read(corpus_path)
@@ -68,11 +79,11 @@ def load_corpus(directory):
     if set(metadata) != set(unique_index(corpus, "session_id")):
         raise ValueError("Manifest and corpus sessions differ")
     for document in corpus:
-        validate(document)
+        (validate_review_document if reviewed else validate)(document)
     return corpus, manifest, gold
 
 
-def replay(document, strategy, calculator):
+def replay(document, strategy, calculator, *, reviewed=False):
     if strategy == "message_only":
         steps = []
         for message in document["messages"]:
@@ -83,21 +94,21 @@ def replay(document, strategy, calculator):
                     e for e in document["entities"] if e["message_id"] == message["id"]
                 ],
             }
-            steps.extend(assess(isolated, calculator)["messages"])
+            steps.extend(alert_steps(isolated, calculator, reviewed=reviewed))
     else:
         if strategy == "pooled_known_owners":
             document = {
                 **document,
                 "entities": [
                     {**entity, "person_id": "pooled"}
-                    if entity["person_id"] is not None
+                    if isinstance(entity["person_id"], str)
                     else entity
                     for entity in document["entities"]
                 ],
             }
         elif strategy != "per_person":
             raise ValueError(f"Unsupported strategy: {strategy}")
-        steps = assess(document, calculator)["messages"]
+        steps = alert_steps(document, calculator, reviewed=reviewed)
     first = next(
         ((i, s["reason"]) for i, s in enumerate(steps, 1) if s["rule_alert"]), None
     )
@@ -140,9 +151,10 @@ def detector_priority(entity, mapping):
     return (2, -entity["score"], entity["start"])
 
 
-def adapt_message(document, message, raw, mapping):
+def adapt_message(document, message, raw, mapping, *, reviewed=False):
     text = message["text"]
     accepted, discarded = [], Counter()
+    validator = validate_review_document if reviewed else validate
     for prediction in sorted(raw, key=lambda e: detector_priority(e, mapping)):
         kind = mapping.get(prediction["type"])
         if not kind:
@@ -161,7 +173,15 @@ def adapt_message(document, message, raw, mapping):
             discarded["unsupported_sex_value"] += 1
             continue
         if kind == "phone" and (
-            not PHONE.fullmatch(value) or len(re.findall(r"\d", value)) != 11
+            not PHONE.fullmatch(value)
+            or len(re.findall(r"\d", value)) != 11
+            or (
+                reviewed
+                and (
+                    (start > 0 and text[start - 1].isdigit())
+                    or (end < len(text) and text[end].isdigit())
+                )
+            )
         ):
             discarded["incomplete_phone"] += 1
             continue
@@ -180,7 +200,7 @@ def adapt_message(document, message, raw, mapping):
             "person_id": owner_from_text(text, kind, start),
         }
         try:
-            validate({**document, "messages": [message], "entities": [entity]})
+            validator({**document, "messages": [message], "entities": [entity]})
         except ValueError:
             discarded["contract_validation"] += 1
             continue
@@ -208,7 +228,7 @@ def load_gliner(model_dir, config):
     return model.to("cpu").eval(), manifest
 
 
-def run_ner(corpus, config, model, mapping, groups):
+def run_ner(corpus, config, model, mapping, groups, *, reviewed=False):
     corpus_predictions, raw_messages = [], []
     discarded = Counter()
     extraction = {split: Counter() for split in set(groups.values())}
@@ -245,7 +265,7 @@ def run_ner(corpus, config, model, mapping, groups):
                     )
                 )
             accepted, rejected = adapt_message(
-                inference_input, message, candidates, mapping
+                inference_input, message, candidates, mapping, reviewed=reviewed
             )
             discarded.update(rejected)
             gold_mentions = [
@@ -263,7 +283,7 @@ def run_ner(corpus, config, model, mapping, groups):
                 }
             )
         predicted_document = {**inference_input, "entities": entities}
-        validate(predicted_document)
+        (validate_review_document if reviewed else validate)(predicted_document)
         corpus_predictions.append(predicted_document)
     return corpus_predictions, {
         "extraction_by_split": {k: dict(v) for k, v in sorted(extraction.items())},
@@ -294,6 +314,7 @@ def main():
     if args.output.exists():
         parser.error("Choose a fresh output directory")
     corpus, manifest, gold = load_corpus(args.corpus)
+    reviewed = manifest["version"] == CORPUS_VERSION
     groups = {r["session_id"]: r["split"] for r in manifest["sessions"]}
     calculator = Calculator(policy_only=True)
     modes = {"gold_spans_and_owners": corpus}
@@ -302,18 +323,22 @@ def main():
     raw = None
     detector = None
     if not args.gold_only:
+        mapping = taxonomy["legacy_ner_mapping"]
+        if reviewed:
+            mapping = {**mapping, "PERSON": GENERIC_PERSON}
         mode = "regex" if args.regex_only else "regex_gliner"
         model, prepared = (
             (None, None) if args.regex_only else load_gliner(args.model_dir, config)
         )
         modes[mode], raw = run_ner(
-            corpus, config, model, taxonomy["legacy_ner_mapping"], groups
+            corpus, config, model, mapping, groups, reviewed=reviewed
         )
         detector = {
             "mode": mode,
             "owner_strategy": "explicit_self_current_message",
             "config_sha256": digest(SMOKE_CONFIG),
             "checksum_required": False,
+            **({"checksum_required_for_alert": True} if reviewed else {}),
             "gliner_version": version("gliner") if model is not None else None,
             "torch_version": version("torch") if model is not None else None,
             "prepared_model": prepared,
@@ -325,6 +350,7 @@ def main():
         "policy_sha256": digest(POLICY_PATH),
         "taxonomy_sha256": digest(CLASS_PATH),
         "policy_mode": "policy_only",
+        **({"review_policy": REVIEW_POLICY} if reviewed else {}),
         "session_splits": groups,
         "implementation": code_version(),
         "spec_commit": BASE,
@@ -334,7 +360,8 @@ def main():
         "modes": {
             mode: {
                 strategy: [
-                    replay(document, strategy, calculator) for document in documents
+                    replay(document, strategy, calculator, reviewed=reviewed)
+                    for document in documents
                 ]
                 for strategy in STRATEGIES
             }

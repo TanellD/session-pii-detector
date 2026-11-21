@@ -14,6 +14,7 @@ from prepare_session_corpus import (  # noqa: E402
     digest,
 )
 from run_session_baselines import adapt_message, owner_from_text, replay  # noqa: E402
+from session_alert_review import CORPUS_VERSION, GENERIC_PERSON  # noqa: E402
 
 
 def gold(session_id, expected, *, uncertainty=None, status=None):
@@ -258,6 +259,15 @@ class CorpusAndReplayTests(unittest.TestCase):
         self.assertIsNone(corpus[0]["entities"][-1]["person_id"])
         self.assertEqual(manifest[0]["shared_owners"], {"m2-e1": ["a", "b"]})
         self.assertEqual(manifest[0]["message_roles"], {"m1": "user", "m2": "user"})
+        reviewed_corpus, reviewed_manifest = compile_corpus(
+            {**plan, "version": CORPUS_VERSION}, authored
+        )
+        self.assertEqual(reviewed_corpus[0]["entities"][-1]["person_id"], ["a", "b"])
+        self.assertNotIn("shared_owners", reviewed_manifest[0])
+        calculator = Calculator(policy_only=True)
+        for strategy in ("message_only", "pooled_known_owners", "per_person"):
+            result = replay(reviewed_corpus[0], strategy, calculator, reviewed=True)
+            self.assertIsNone(result["t_pred"])
         plan["scenarios"].append(
             {**plan["scenarios"][0], "id": "duplicate", "split": "development"}
         )
@@ -302,6 +312,81 @@ class CorpusAndReplayTests(unittest.TestCase):
         self.assertIsNone(owner_from_text(prefix, "sex", len(prefix)))
         prefix = "Проверьте раздел анкеты: я "
         self.assertEqual(owner_from_text(prefix, "sex", len(prefix)), "speaker")
+
+    def test_review_checksum_keeps_span_and_changes_first_alert(self):
+        document = self.document("speaker")
+        invalid, valid = "000-000-000 16", "000-000-001 01"
+        messages = [
+            {"id": f"m{index}", "text": f"СНИЛС: {value}."}
+            for index, value in enumerate((invalid, valid), 1)
+        ]
+        mapping = {"SNILS": "snils"}
+        from benchmarks.pii_smoke.regex_detector import predict
+
+        entities = []
+        for message in messages:
+            raw = predict(message["text"], require_valid_checksum=False)
+            spans, discarded = adapt_message(
+                document, message, raw, mapping, reviewed=True
+            )
+            self.assertEqual(len(spans), 1)
+            self.assertEqual(discarded, {})
+            entities.extend(spans)
+        document = {**document, "messages": messages, "entities": entities}
+        calculator = Calculator(policy_only=True)
+        self.assertEqual(replay(document, "per_person", calculator)["t_pred"], 1)
+        checked = replay(document, "per_person", calculator, reviewed=True)
+        self.assertEqual((checked["t_pred"], checked["rule_id"]), (2, "red_rule"))
+
+    def test_review_person_retains_generic_span_and_discards_overlap(self):
+        document = self.document("speaker")
+        text = "Контакт Листослав Сумер, почта listoslav@example.invalid."
+        name, email = "Листослав Сумер", "listoslav@example.invalid"
+        message = {"id": "m1", "text": text}
+        raw = [
+            {
+                "type": kind,
+                "start": text.index(span),
+                "end": text.index(span) + len(span),
+                "score": 0.9,
+                "source": source,
+            }
+            for kind, span, source in (
+                ("PERSON", name, "gliner"),
+                ("PERSON", "listoslav", "gliner"),
+                ("EMAIL", email, "regex"),
+            )
+        ]
+        accepted, discarded = adapt_message(
+            document,
+            message,
+            raw,
+            {"PERSON": GENERIC_PERSON, "EMAIL": "email"},
+            reviewed=True,
+        )
+        self.assertEqual(
+            [entity["type"] for entity in accepted], [GENERIC_PERSON, "email"]
+        )
+        self.assertEqual(discarded, {"overlap": 1})
+
+    def test_review_rejects_partial_model_phone_inside_long_number(self):
+        document = self.document("speaker")
+        value = "+7 (000) 001-23-45"
+        message = {"id": "m1", "text": f"{value}6"}
+        raw = [
+            {
+                "type": "PHONE",
+                "start": 0,
+                "end": len(value),
+                "score": 0.9,
+                "source": "gliner",
+            }
+        ]
+        accepted, discarded = adapt_message(
+            document, message, raw, {"PHONE": "phone"}, reviewed=True
+        )
+        self.assertEqual(accepted, [])
+        self.assertEqual(discarded, {"incomplete_phone": 1})
 
 
 if __name__ == "__main__":

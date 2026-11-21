@@ -204,6 +204,7 @@ def evaluate(gold, predictions, groups=None):
         or gold["policy"] != POLICY["version"]
         or gold["policy_sha256"] != predictions["policy_sha256"]
         or gold["policy_sha256"] != digest(POLICY_PATH)
+        or gold.get("review_policy") != predictions.get("review_policy")
     ):
         raise ValueError("Corpus or policy differs between gold and predictions")
     if groups is None and "session_splits" in predictions:
@@ -242,6 +243,7 @@ def evaluate(gold, predictions, groups=None):
         "sessions_sha256": gold["sessions_sha256"],
         "policy": gold["policy"],
         "policy_sha256": gold["policy_sha256"],
+        **({"review_policy": gold["review_policy"]} if "review_policy" in gold else {}),
         "review_status": gold["review_status"],
         "results": results,
     }

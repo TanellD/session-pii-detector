@@ -7,7 +7,14 @@ import json
 from pathlib import Path
 
 from annotation_calculator import Calculator
-from annotation_contract import VERSION, assess, validate
+from annotation_contract import VERSION, validate
+from session_alert_review import (
+    CORPUS_VERSION,
+    GENERIC_PERSON,
+    REVIEW_POLICY,
+    alert_steps,
+    validate_review_document,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,6 +56,7 @@ def unique_index(rows, field):
 
 
 def compile_corpus(plan, authored):
+    reviewed = plan.get("version") == CORPUS_VERSION
     scenarios = unique_index(plan["scenarios"], "id")
     dialogues = unique_index(authored, "id")
     if scenarios.keys() != dialogues.keys():
@@ -81,12 +89,18 @@ def compile_corpus(plan, authored):
                 start = text.index(value)
                 entity_id = f"{message_id}-e{position}"
                 if isinstance(owner, list):
-                    if len(set(owner)) < 2 or not set(owner) <= known_owners:
+                    if (
+                        len(owner) < 2
+                        or len(set(owner)) != len(owner)
+                        or not set(owner) <= known_owners
+                    ):
                         raise ValueError(
                             f"{session_id}/{entity_id}: shared owners lack prior evidence"
                         )
-                    shared_owners[entity_id] = owner
-                    owner_label, owner = "shared", None
+                    if not reviewed:
+                        shared_owners[entity_id] = owner
+                        owner = None
+                    owner_label = "shared"
                 else:
                     owner_label = owner or "unknown"
                     if owner is not None:
@@ -117,7 +131,7 @@ def compile_corpus(plan, authored):
                 "clarification_reason": None,
             },
         }
-        validate(document)
+        (validate_review_document if reviewed else validate)(document)
         documents.append(document)
         manifest.append(
             {
@@ -126,13 +140,13 @@ def compile_corpus(plan, authored):
                 "family": scenario["family"],
                 "profiles": scenario["profiles"],
                 "message_roles": {m["id"]: "user" for m in messages},
-                "shared_owners": shared_owners,
+                **({} if reviewed else {"shared_owners": shared_owners}),
             }
         )
     return documents, manifest
 
 
-def compile_gold(documents, ledger, calculator):
+def compile_gold(documents, ledger, calculator, *, reviewed=False):
     by_id = unique_index(ledger, "session_id")
     if by_id.keys() != {d["session_id"] for d in documents}:
         raise ValueError("Alert ledger must cover exactly the corpus")
@@ -143,12 +157,12 @@ def compile_gold(documents, ledger, calculator):
         for entity in document["entities"]:
             entities[entity["message_id"]].add(entity["id"])
         available, steps, first = set(), [], None
-        predicted = assess(document, calculator)
+        predicted = alert_steps(document, calculator, reviewed=reviewed)
         for index, (message, entry, calculated) in enumerate(
             zip(
                 document["messages"],
                 by_id[session_id]["steps"],
-                predicted["messages"],
+                predicted,
                 strict=True,
             ),
             1,
@@ -179,7 +193,12 @@ def compile_gold(documents, ledger, calculator):
                         if entity["id"] in evidence_ids
                     ],
                 }
-                if assess(cited_prefix, calculator)["messages"][-1]["reason"] != reason:
+                if (
+                    alert_steps(cited_prefix, calculator, reviewed=reviewed)[-1][
+                        "reason"
+                    ]
+                    != reason
+                ):
                     raise ValueError(
                         f"Cited spans do not support the rule: {session_id}/{message_id}"
                     )
@@ -266,6 +285,8 @@ def main():
     plan_path = directory / "scenario-plan.json"
     authored_path = directory / "authored-dialogues.json"
     plan = read(plan_path)
+    reviewed = plan["version"] == CORPUS_VERSION
+    review_metadata = {"review_policy": REVIEW_POLICY} if reviewed else {}
     documents, manifest = compile_corpus(plan, read(authored_path))
     sessions_path = directory / "sessions.json"
     write_json(sessions_path, documents)
@@ -276,6 +297,8 @@ def main():
             "schema": VERSION,
             "taxonomy": POLICY["taxonomy_version"],
             "spec_commit": BASE,
+            **review_metadata,
+            **({"extra_classes": {GENERIC_PERSON: "yellow"}} if reviewed else {}),
             "scenario_plan_sha256": digest(plan_path),
             "authored_dialogues_sha256": digest(authored_path),
             "sessions_sha256": digest(sessions_path),
@@ -295,7 +318,10 @@ def main():
     if args.with_alerts:
         ledger_path = directory / "author-alert-ledger.json"
         gold, differences = compile_gold(
-            documents, read(ledger_path), Calculator(policy_only=True)
+            documents,
+            read(ledger_path),
+            Calculator(policy_only=True),
+            reviewed=reviewed,
         )
         write_json(
             directory / "gold.json",
@@ -307,6 +333,7 @@ def main():
                 "author_ledger_sha256": digest(ledger_path),
                 "review_status": "author_checked_pending_independent_review",
                 "calculator_mode": "policy_only",
+                **review_metadata,
                 "calculator_disagreements": differences,
                 "sessions": gold,
             },
