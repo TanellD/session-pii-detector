@@ -14,7 +14,13 @@ from prepare_session_corpus import (  # noqa: E402
     digest,
 )
 from run_session_baselines import adapt_message, owner_from_text, replay  # noqa: E402
-from session_alert_review import CORPUS_VERSION, GENERIC_PERSON  # noqa: E402
+from session_alert_review import (  # noqa: E402
+    GENERIC_PERSON,
+    REVIEW_POLICY,
+    REVIEW_SCHEMA,
+    review_steps,
+    validate_review_document,
+)
 
 
 def gold(session_id, expected, *, uncertainty=None, status=None):
@@ -259,9 +265,23 @@ class CorpusAndReplayTests(unittest.TestCase):
         self.assertIsNone(corpus[0]["entities"][-1]["person_id"])
         self.assertEqual(manifest[0]["shared_owners"], {"m2-e1": ["a", "b"]})
         self.assertEqual(manifest[0]["message_roles"], {"m1": "user", "m2": "user"})
-        reviewed_corpus, reviewed_manifest = compile_corpus(
-            {**plan, "version": CORPUS_VERSION}, authored
+        reviewed_plan = {
+            **plan,
+            "version": "session-alerts-v2",
+            "review_policy": REVIEW_POLICY,
+        }
+        reviewed_corpus, reviewed_manifest = compile_corpus(reviewed_plan, authored)
+        renamed_corpus, renamed_manifest = compile_corpus(
+            {**reviewed_plan, "version": "session-alerts-v3"}, authored
         )
+        self.assertEqual(
+            (renamed_corpus, renamed_manifest), (reviewed_corpus, reviewed_manifest)
+        )
+        self.assertEqual(reviewed_corpus[0]["schema_version"], REVIEW_SCHEMA)
+        with self.assertRaisesRegex(ValueError, "Expected schema"):
+            validate_review_document(
+                {**reviewed_corpus[0], "schema_version": corpus[0]["schema_version"]}
+            )
         self.assertEqual(reviewed_corpus[0]["entities"][-1]["person_id"], ["a", "b"])
         self.assertNotIn("shared_owners", reviewed_manifest[0])
         calculator = Calculator(policy_only=True)
@@ -315,6 +335,7 @@ class CorpusAndReplayTests(unittest.TestCase):
 
     def test_review_checksum_keeps_span_and_changes_first_alert(self):
         document = self.document("speaker")
+        reviewed = {**document, "schema_version": REVIEW_SCHEMA}
         invalid, valid = "000-000-000 16", "000-000-001 01"
         messages = [
             {"id": f"m{index}", "text": f"СНИЛС: {value}."}
@@ -327,7 +348,7 @@ class CorpusAndReplayTests(unittest.TestCase):
         for message in messages:
             raw = predict(message["text"], require_valid_checksum=False)
             spans, discarded = adapt_message(
-                document, message, raw, mapping, reviewed=True
+                reviewed, message, raw, mapping, reviewed=True
             )
             self.assertEqual(len(spans), 1)
             self.assertEqual(discarded, {})
@@ -335,11 +356,50 @@ class CorpusAndReplayTests(unittest.TestCase):
         document = {**document, "messages": messages, "entities": entities}
         calculator = Calculator(policy_only=True)
         self.assertEqual(replay(document, "per_person", calculator)["t_pred"], 1)
-        checked = replay(document, "per_person", calculator, reviewed=True)
+        checked = replay(
+            {**document, "schema_version": REVIEW_SCHEMA},
+            "per_person",
+            calculator,
+            reviewed=True,
+        )
         self.assertEqual((checked["t_pred"], checked["rule_id"]), (2, "red_rule"))
 
+    def test_review_invalid_checksum_correction_replaces_known_document(self):
+        plan = {
+            "version": "correction-fixture",
+            "review_policy": REVIEW_POLICY,
+            "scenarios": [
+                {
+                    "id": "correction",
+                    "split": "test",
+                    "family": "correction",
+                    "profiles": ["speaker"],
+                    "steps": [["speaker:snils"]] * 3,
+                }
+            ],
+        }
+        valid, invalid = "000-000-001 01", "000-000-000 16"
+        documents, _ = compile_corpus(
+            plan,
+            [
+                {
+                    "id": "correction",
+                    "messages": [
+                        ["Мой СНИЛС: " + value, ["snils", value, "speaker"]]
+                        for value in (valid, invalid, valid)
+                    ],
+                }
+            ],
+        )
+        calculator = Calculator(policy_only=True)
+        steps = review_steps(documents[0], calculator)
+        self.assertEqual([step["rule_alert"] for step in steps], [True, False, True])
+        self.assertEqual(
+            replay(documents[0], "per_person", calculator, reviewed=True)["t_pred"], 1
+        )
+
     def test_review_person_retains_generic_span_and_discards_overlap(self):
-        document = self.document("speaker")
+        document = {**self.document("speaker"), "schema_version": REVIEW_SCHEMA}
         text = "Контакт Листослав Сумер, почта listoslav@example.invalid."
         name, email = "Листослав Сумер", "listoslav@example.invalid"
         message = {"id": "m1", "text": text}
@@ -370,9 +430,8 @@ class CorpusAndReplayTests(unittest.TestCase):
         self.assertEqual(discarded, {"overlap": 1})
 
     def test_review_rejects_partial_model_phone_inside_long_number(self):
-        document = self.document("speaker")
+        document = {**self.document("speaker"), "schema_version": REVIEW_SCHEMA}
         value = "+7 (000) 001-23-45"
-        message = {"id": "m1", "text": f"{value}6"}
         raw = [
             {
                 "type": "PHONE",
@@ -382,11 +441,36 @@ class CorpusAndReplayTests(unittest.TestCase):
                 "source": "gliner",
             }
         ]
-        accepted, discarded = adapt_message(
-            document, message, raw, {"PHONE": "phone"}, reviewed=True
-        )
-        self.assertEqual(accepted, [])
-        self.assertEqual(discarded, {"incomplete_phone": 1})
+        for suffix in ("6", "-6", " 6"):
+            with self.subTest(suffix=suffix):
+                message = {"id": "m1", "text": f"{value}{suffix}"}
+                accepted, discarded = adapt_message(
+                    document, message, raw, {"PHONE": "phone"}, reviewed=True
+                )
+                self.assertEqual(accepted, [])
+                self.assertEqual(discarded, {"incomplete_phone": 1})
+
+    def test_review_regex_phone_suffix_cannot_trigger_contact_pair(self):
+        from benchmarks.pii_smoke.regex_detector import predict
+
+        document = {**self.document("speaker"), "schema_version": REVIEW_SCHEMA}
+        mapping = {"PHONE": "phone", "EMAIL": "email"}
+        for suffix, expected in (("-6.", None), (" 6.", None), (", код 6.", 1)):
+            with self.subTest(suffix=suffix):
+                message = {
+                    "id": "m1",
+                    "text": f"Мой телефон +7 (000) 001-23-45{suffix} Моя почта review@example.invalid.",
+                }
+                spans, _ = adapt_message(
+                    document, message, predict(message["text"]), mapping, reviewed=True
+                )
+                result = replay(
+                    {**document, "messages": [message], "entities": spans},
+                    "per_person",
+                    Calculator(policy_only=True),
+                    reviewed=True,
+                )
+                self.assertEqual(result["t_pred"], expected)
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 from annotation_calculator import Calculator, RED
-from annotation_contract import validate
+from annotation_contract import VERSION, validate
 from evaluate_session_alerts import evaluate
 from prepare_session_corpus import (
     BASE,
@@ -25,10 +25,11 @@ from prepare_session_corpus import (
     write_json,
 )
 from session_alert_review import (
-    CORPUS_VERSION,
     GENERIC_PERSON,
     REVIEW_POLICY,
+    REVIEW_SCHEMA,
     alert_steps,
+    uses_review_policy,
     validate_review_document,
 )
 
@@ -54,17 +55,20 @@ SELF_CUES = {
 SEX_VALUES = {"женщина", "мужчина", "женский", "мужской"}
 HOUSE = re.compile(r"(?:\bд\.|\bдом)\s*\d", re.I)
 PHONE = re.compile(r"(?:\+7|8)[ ()\d-]+")
+PHONE_CONTINUATION_BEFORE = re.compile(r"\d[ \t\u00a0()-]*\Z")
+PHONE_CONTINUATION_AFTER = re.compile(r"[ \t\u00a0()-]*\d")
 
 
 def load_corpus(directory):
     corpus_path = directory / "sessions.json"
     manifest, gold = read(directory / "manifest.json"), read(directory / "gold.json")
-    reviewed = manifest["version"] == CORPUS_VERSION
+    reviewed = uses_review_policy(manifest)
     expected_review_policy = REVIEW_POLICY if reviewed else None
     if (
         digest(corpus_path) != manifest["sessions_sha256"]
         or manifest["sessions_sha256"] != gold["sessions_sha256"]
         or manifest["version"] != gold["version"]
+        or manifest["schema"] != (REVIEW_SCHEMA if reviewed else VERSION)
         or manifest["spec_commit"] != BASE
         or manifest["taxonomy"] != POLICY["taxonomy_version"]
         or gold["calculator_disagreements"]
@@ -178,8 +182,8 @@ def adapt_message(document, message, raw, mapping, *, reviewed=False):
             or (
                 reviewed
                 and (
-                    (start > 0 and text[start - 1].isdigit())
-                    or (end < len(text) and text[end].isdigit())
+                    PHONE_CONTINUATION_BEFORE.search(text[:start])
+                    or PHONE_CONTINUATION_AFTER.match(text[end:])
                 )
             )
         ):
@@ -314,7 +318,7 @@ def main():
     if args.output.exists():
         parser.error("Choose a fresh output directory")
     corpus, manifest, gold = load_corpus(args.corpus)
-    reviewed = manifest["version"] == CORPUS_VERSION
+    reviewed = uses_review_policy(manifest)
     groups = {r["session_id"]: r["split"] for r in manifest["sessions"]}
     calculator = Calculator(policy_only=True)
     modes = {"gold_spans_and_owners": corpus}

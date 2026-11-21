@@ -9,10 +9,11 @@ from pathlib import Path
 from annotation_calculator import Calculator
 from annotation_contract import VERSION, validate
 from session_alert_review import (
-    CORPUS_VERSION,
     GENERIC_PERSON,
     REVIEW_POLICY,
+    REVIEW_SCHEMA,
     alert_steps,
+    uses_review_policy,
     validate_review_document,
 )
 
@@ -56,7 +57,7 @@ def unique_index(rows, field):
 
 
 def compile_corpus(plan, authored):
-    reviewed = plan.get("version") == CORPUS_VERSION
+    reviewed = uses_review_policy(plan)
     scenarios = unique_index(plan["scenarios"], "id")
     dialogues = unique_index(authored, "id")
     if scenarios.keys() != dialogues.keys():
@@ -121,7 +122,7 @@ def compile_corpus(plan, authored):
                     f"{session_id}/{message_id}: spans or owners differ from plan"
                 )
         document = {
-            "schema_version": VERSION,
+            "schema_version": REVIEW_SCHEMA if reviewed else VERSION,
             "session_id": session_id,
             "messages": messages,
             "entities": entities,
@@ -285,7 +286,7 @@ def main():
     plan_path = directory / "scenario-plan.json"
     authored_path = directory / "authored-dialogues.json"
     plan = read(plan_path)
-    reviewed = plan["version"] == CORPUS_VERSION
+    reviewed = uses_review_policy(plan)
     review_metadata = {"review_policy": REVIEW_POLICY} if reviewed else {}
     documents, manifest = compile_corpus(plan, read(authored_path))
     sessions_path = directory / "sessions.json"
@@ -294,7 +295,7 @@ def main():
         directory / "manifest.json",
         {
             "version": plan["version"],
-            "schema": VERSION,
+            "schema": REVIEW_SCHEMA if reviewed else VERSION,
             "taxonomy": POLICY["taxonomy_version"],
             "spec_commit": BASE,
             **review_metadata,
