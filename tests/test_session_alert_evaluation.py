@@ -398,6 +398,57 @@ class CorpusAndReplayTests(unittest.TestCase):
             replay(documents[0], "per_person", calculator, reviewed=True)["t_pred"], 1
         )
 
+    def test_review_ledger_requires_active_evidence_after_correction(self):
+        plan = {
+            "version": "evidence-correction-test",
+            "review_policy": REVIEW_POLICY,
+            "scenarios": [
+                {
+                    "id": "evidence-correction",
+                    "split": "test",
+                    "family": "checksum",
+                    "profiles": ["speaker"],
+                    "steps": [
+                        ["speaker:snils"],
+                        ["speaker:snils", "speaker:individual_inn"],
+                    ],
+                }
+            ],
+        }
+        authored = [
+            {
+                "id": "evidence-correction",
+                "messages": [
+                    [
+                        "Мой СНИЛС: 000-000-001 01.",
+                        ["snils", "000-000-001 01", "speaker"],
+                    ],
+                    [
+                        "Поправка. Мой СНИЛС: 000-000-000 16. ИНН: 000000012373.",
+                        ["snils", "000-000-000 16", "speaker"],
+                        ["individual_inn", "000000012373", "speaker"],
+                    ],
+                ],
+            }
+        ]
+        documents, _ = compile_corpus(plan, authored)
+        steps = [
+            ["red_rule", ["m1-e1"], None, "Valid SNILS"],
+            ["red_rule", ["m1-e1"], None, "Old SNILS cited after replacement"],
+        ]
+        ledger = [{"session_id": "evidence-correction", "steps": steps}]
+        calculator = Calculator(policy_only=True)
+        with self.assertRaisesRegex(
+            ValueError, "superseded: evidence-correction/m2/m1-e1"
+        ):
+            compile_gold(documents, ledger, calculator, reviewed=True)
+
+        steps[1] = ["red_rule", ["m2-e2"], None, "Valid INN"]
+        rows, differences = compile_gold(documents, ledger, calculator, reviewed=True)
+        self.assertEqual(differences, [])
+        self.assertEqual(rows[0]["t_gold"], 1)
+        self.assertEqual(rows[0]["steps"][1]["evidence_ids"], ["m2-e2"])
+
     def test_review_person_retains_generic_span_and_discards_overlap(self):
         document = {**self.document("speaker"), "schema_version": REVIEW_SCHEMA}
         text = "Контакт Листослав Сумер, почта listoslav@example.invalid."

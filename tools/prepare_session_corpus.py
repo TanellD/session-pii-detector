@@ -154,10 +154,11 @@ def compile_gold(documents, ledger, calculator, *, reviewed=False):
     rows, differences = [], []
     for document in documents:
         session_id = document["session_id"]
-        entities = defaultdict(set)
+        entities = defaultdict(list)
         for entity in document["entities"]:
-            entities[entity["message_id"]].add(entity["id"])
-        available, steps, first = set(), [], None
+            entities[entity["message_id"]].append(entity)
+        available, active_by_owner = {}, {}
+        steps, first = [], None
         predicted = alert_steps(document, calculator, reviewed=reviewed)
         for index, (message, entry, calculated) in enumerate(
             zip(
@@ -169,7 +170,12 @@ def compile_gold(documents, ledger, calculator, *, reviewed=False):
             1,
         ):
             message_id = message["id"]
-            available.update(entities[message_id])
+            for entity in sorted(entities[message_id], key=lambda row: row["start"]):
+                entity_id = entity["id"]
+                available[entity_id] = entity
+                owner = entity["person_id"]
+                if isinstance(owner, str):
+                    active_by_owner[owner, entity["type"]] = entity_id
             reason, evidence, uncertainty, rationale = entry
             if not rationale or (reason and (reason not in REASONS or not evidence)):
                 raise ValueError(
@@ -179,20 +185,26 @@ def compile_gold(documents, ledger, calculator, *, reviewed=False):
             if (
                 (not reason and evidence)
                 or len(evidence_ids) != len(evidence)
-                or not evidence_ids <= available
+                or not evidence_ids <= available.keys()
             ):
                 raise ValueError(
                     f"Invalid or future evidence: {session_id}/{message_id}"
                 )
             if reason:
+                for entity_id in evidence:
+                    entity = available[entity_id]
+                    owner = entity["person_id"]
+                    if (
+                        isinstance(owner, str)
+                        and active_by_owner[owner, entity["type"]] != entity_id
+                    ):
+                        raise ValueError(
+                            f"Cited span was superseded: {session_id}/{message_id}/{entity_id}"
+                        )
                 cited_prefix = {
                     **document,
                     "messages": document["messages"][:index],
-                    "entities": [
-                        entity
-                        for entity in document["entities"]
-                        if entity["id"] in evidence_ids
-                    ],
+                    "entities": [available[entity_id] for entity_id in evidence],
                 }
                 if (
                     alert_steps(cited_prefix, calculator, reviewed=reviewed)[-1][
