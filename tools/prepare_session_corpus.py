@@ -8,6 +8,7 @@ from pathlib import Path
 
 from annotation_calculator import Calculator
 from annotation_contract import VERSION, validate
+from ownership import owner_ids
 from session_alert_review import (
     GENERIC_PERSON,
     REVIEW_POLICY,
@@ -174,8 +175,8 @@ def compile_gold(documents, ledger, calculator, *, reviewed=False):
                 entity_id = entity["id"]
                 available[entity_id] = entity
                 owner = entity["person_id"]
-                if isinstance(owner, str):
-                    active_by_owner[owner, entity["type"]] = entity_id
+                for person in owner_ids(owner):
+                    active_by_owner[person, entity["type"]] = entity_id
             reason, evidence, uncertainty, rationale = entry
             if not rationale or (reason and (reason not in REASONS or not evidence)):
                 raise ValueError(
@@ -191,20 +192,19 @@ def compile_gold(documents, ledger, calculator, *, reviewed=False):
                     f"Invalid or future evidence: {session_id}/{message_id}"
                 )
             if reason:
+                active_evidence = []
                 for entity_id in evidence:
                     entity = available[entity_id]
-                    owner = entity["person_id"]
-                    if (
-                        isinstance(owner, str)
-                        and active_by_owner[owner, entity["type"]] != entity_id
-                    ):
-                        raise ValueError(
-                            f"Cited span was superseded: {session_id}/{message_id}/{entity_id}"
-                        )
+                    owners = owner_ids(entity["person_id"])
+                    current = [p for p in owners if active_by_owner[p, entity["type"]] == entity_id]
+                    if owners and not current:
+                        raise ValueError(f"Cited span was superseded: {session_id}/{message_id}/{entity_id}")
+                    active_evidence.append({**entity, "person_id":
+                        (current[0] if len(current) == 1 else current) if current else None})
                 cited_prefix = {
                     **document,
                     "messages": document["messages"][:index],
-                    "entities": [available[entity_id] for entity_id in evidence],
+                    "entities": active_evidence,
                 }
                 if (
                     alert_steps(cited_prefix, calculator, reviewed=reviewed)[-1][

@@ -26,6 +26,7 @@ from prepare_session_corpus import (
 )
 from session_alert_review import (
     GENERIC_PERSON,
+    DOCUMENT_CHECKSUMS,
     REVIEW_POLICY,
     REVIEW_SCHEMA,
     alert_steps,
@@ -105,7 +106,7 @@ def replay(document, strategy, calculator, *, reviewed=False):
                 **document,
                 "entities": [
                     {**entity, "person_id": "pooled"}
-                    if isinstance(entity["person_id"], str)
+                    if entity["person_id"] is not None
                     else entity
                     for entity in document["entities"]
                 ],
@@ -173,6 +174,9 @@ def adapt_message(document, message, raw, mapping, *, reviewed=False):
             discarded["invalid_span"] += 1
             continue
         value = text[start:end]
+        if reviewed and kind in DOCUMENT_CHECKSUMS and not DOCUMENT_CHECKSUMS[kind](value):
+            discarded["invalid_checksum"] += 1
+            continue
         if kind == "sex" and value.casefold() not in SEX_VALUES:
             discarded["unsupported_sex_value"] += 1
             continue
@@ -251,23 +255,22 @@ def run_ner(corpus, config, model, mapping, groups, *, reviewed=False):
         entities = []
         for message in document["messages"]:
             text = message["text"]
-            candidates = predict(text, require_valid_checksum=False)
-            if model is not None:
-                candidates.extend(
-                    {
-                        "type": config["labels"][e["label"]],
-                        "start": e["start"],
-                        "end": e["end"],
-                        "score": float(e["score"]),
-                        "source": "gliner",
-                    }
-                    for e in model.predict_entities(
-                        text,
-                        list(config["labels"]),
-                        threshold=config["threshold"],
-                        flat_ner=True,
-                    )
-                )
+            if reviewed:
+                from benchmarks.adapter.adapter import extract
+                model_entities = (model.predict_entities(text, list(config["labels"]),
+                                  threshold=config["threshold"], flat_ner=True)
+                                  if model is not None else [])
+                candidates = [dict(type=m.type, start=m.start, end=m.end,
+                                   score=m.confidence, source=m.source)
+                              for m in extract(text, gliner_entities=model_entities, config=config)]
+            else:
+                candidates = predict(text, require_valid_checksum=False)
+                if model is not None:
+                    candidates.extend(
+                        dict(type=config["labels"][e["label"]], start=e["start"], end=e["end"],
+                             score=float(e["score"]), source="gliner")
+                        for e in model.predict_entities(text, list(config["labels"]),
+                             threshold=config["threshold"], flat_ner=True))
             accepted, rejected = adapt_message(
                 inference_input, message, candidates, mapping, reviewed=reviewed
             )
@@ -341,7 +344,7 @@ def main():
             "mode": mode,
             "owner_strategy": "explicit_self_current_message",
             "config_sha256": digest(SMOKE_CONFIG),
-            "checksum_required": False,
+            "checksum_required": reviewed,
             **({"checksum_required_for_alert": True} if reviewed else {}),
             "gliner_version": version("gliner") if model is not None else None,
             "torch_version": version("torch") if model is not None else None,

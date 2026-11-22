@@ -94,3 +94,24 @@ python -X utf8 tools/prepare_session_corpus.py data/session-alerts-v2 --with-ale
 ```
 
 [Промпт для расширения набора](session-alerts-generation-prompt.md).
+
+## Текущие правила после завершения ревью (v3)
+
+Предыдущие разделы v1/v2 и результаты остаются историей. Новые исходники используют review_policy=pr46-review-v2, стандартную схему annotation-mvp-v2 с расширением ownership-v2, классы mvp-name-parts-person-age-v2 и политику 2026-11-22-working-v3. Один общий личный спан со списком владельцев участвует в каждом профиле. Служебность не выводится из домена почты. PERSON — жёлтый класс без выдумывания частей имени; неопределённость численного вклада не отменяет достаточное качественное правило. Невалидные ИНН/СНИЛС/карта исключаются из эталона извлечения, не только из алерта. Веса сервиса не используются для разметки.
+
+Для доступного переданного v1 выполнена миграция в новый каталог с дополнительными контролируемыми сценариями. Исходный набор сохраняется, старый gold не переносится:
+
+```powershell
+python -X utf8 tools/migrate_session_corpus.py --source "data/experiments/data for testing/session-alerts-v1" --output data/session-alerts-v3 --add-review-scenarios
+python -X utf8 tools/prepare_session_corpus.py data/session-alerts-v3
+```
+
+Скрипт требует исходные authored-dialogues.json, scenario-plan.json и sessions.json. Для другого расположения передайте --source. Результат содержит исходники и migration-report.json без старого gold. Перед запуском --with-alerts автор должен составить новый author-alert-ledger.json по каждому префиксу и передать независимому проверяющему; новый эталон не выводится из ответов сервиса. Собственные сценарии расширения зафиксированы в функции add_review_scenarios; это небольшой контролируемый набор, не независимая естественная выборка. Данные хранятся вне Git.
+
+Оценка извлечения нового адаптера:
+
+```powershell
+python -X utf8 -m benchmarks.eval_gold --gold data/session-alerts-v3/sessions.json --split all --output runs/session-alerts-v3-regex.json
+```
+
+Новый reviewed baseline использует benchmarks.adapter.adapter, а не параллельную реализацию правил. Для полного baseline после подготовки нового gold: python -X utf8 tools/run_session_baselines.py --corpus data/session-alerts-v3 --output runs/session-alerts-v3-baseline --regex-only. Модельный прогон требует подготовленной модели и отдельного нового отчёта.

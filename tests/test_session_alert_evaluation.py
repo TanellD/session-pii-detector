@@ -280,7 +280,7 @@ class CorpusAndReplayTests(unittest.TestCase):
         self.assertEqual(reviewed_corpus[0]["schema_version"], REVIEW_SCHEMA)
         with self.assertRaisesRegex(ValueError, "Expected schema"):
             validate_review_document(
-                {**reviewed_corpus[0], "schema_version": corpus[0]["schema_version"]}
+                {**reviewed_corpus[0], "schema_version": "unsupported-schema"}
             )
         self.assertEqual(reviewed_corpus[0]["entities"][-1]["person_id"], ["a", "b"])
         self.assertNotIn("shared_owners", reviewed_manifest[0])
@@ -333,70 +333,38 @@ class CorpusAndReplayTests(unittest.TestCase):
         prefix = "Проверьте раздел анкеты: я "
         self.assertEqual(owner_from_text(prefix, "sex", len(prefix)), "speaker")
 
-    def test_review_checksum_keeps_span_and_changes_first_alert(self):
-        document = self.document("speaker")
-        reviewed = {**document, "schema_version": REVIEW_SCHEMA}
-        invalid, valid = "000-000-000 16", "000-000-001 01"
-        messages = [
-            {"id": f"m{index}", "text": f"СНИЛС: {value}."}
-            for index, value in enumerate((invalid, valid), 1)
-        ]
-        mapping = {"SNILS": "snils"}
+    def test_review_checksum_filters_extraction_and_gold(self):
         from benchmarks.pii_smoke.regex_detector import predict
-
-        entities = []
-        for message in messages:
-            raw = predict(message["text"], require_valid_checksum=False)
-            spans, discarded = adapt_message(
-                reviewed, message, raw, mapping, reviewed=True
-            )
-            self.assertEqual(len(spans), 1)
-            self.assertEqual(discarded, {})
-            entities.extend(spans)
-        document = {**document, "messages": messages, "entities": entities}
+        document = self.document("speaker")
         calculator = Calculator(policy_only=True)
-        self.assertEqual(replay(document, "per_person", calculator)["t_pred"], 1)
-        checked = replay(
-            {**document, "schema_version": REVIEW_SCHEMA},
-            "per_person",
-            calculator,
-            reviewed=True,
-        )
-        self.assertEqual((checked["t_pred"], checked["rule_id"]), (2, "red_rule"))
+        for value, count in (("000-000-000 16", 0), ("000-000-001 01", 1)):
+            text = "СНИЛС: " + value
+            message = {"id": "m1", "text": text}
+            spans, discarded = adapt_message(document, message,
+                predict(text, require_valid_checksum=False), {"SNILS": "snils"}, reviewed=True)
+            self.assertEqual(len(spans), count)
+            if not count:
+                self.assertEqual(discarded, {"invalid_checksum": 1})
+            test_document = {**document, "schema_version": REVIEW_SCHEMA,
+                             "messages": [message], "entities": spans}
+            self.assertEqual(replay(test_document, "per_person", calculator, reviewed=True)["t_pred"], 1 if count else None)
+            if not count:
+                invalid = {**test_document, "entities": [{"id": "e1", "message_id": "m1",
+                    "start": 7, "end": len(text), "type": "snils", "person_id": "p1"}]}
+                with self.assertRaisesRegex(ValueError, "checksum"):
+                    validate_review_document(invalid)
 
-    def test_review_invalid_checksum_correction_replaces_known_document(self):
-        plan = {
-            "version": "correction-fixture",
-            "review_policy": REVIEW_POLICY,
-            "scenarios": [
-                {
-                    "id": "correction",
-                    "split": "test",
-                    "family": "correction",
-                    "profiles": ["speaker"],
-                    "steps": [["speaker:snils"]] * 3,
-                }
-            ],
-        }
-        valid, invalid = "000-000-001 01", "000-000-000 16"
-        documents, _ = compile_corpus(
-            plan,
-            [
-                {
-                    "id": "correction",
-                    "messages": [
-                        ["Мой СНИЛС: " + value, ["snils", value, "speaker"]]
-                        for value in (valid, invalid, valid)
-                    ],
-                }
-            ],
-        )
-        calculator = Calculator(policy_only=True)
-        steps = review_steps(documents[0], calculator)
-        self.assertEqual([step["rule_alert"] for step in steps], [True, False, True])
-        self.assertEqual(
-            replay(documents[0], "per_person", calculator, reviewed=True)["t_pred"], 1
-        )
+    def test_rejected_document_does_not_rewrite_accepted_history(self):
+        document = self.document("speaker")
+        text = "Мой СНИЛС: 000-000-001 01"
+        message = {"id": "m1", "text": text}
+        document = {**document, "schema_version": REVIEW_SCHEMA,
+                    "messages": [message, {"id": "m2", "text": "Поправка: СНИЛС: 000-000-000 16"}],
+                    "entities": [{"id": "e1", "message_id": "m1", "start": 11,
+                                  "end": len(text), "type": "snils", "person_id": "speaker"}]}
+        steps = review_steps(document, Calculator(policy_only=True))
+        self.assertTrue(steps[0]["rule_alert"])
+        self.assertTrue(steps[1]["rule_alert"])
 
     def test_review_ledger_requires_active_evidence_after_correction(self):
         plan = {
@@ -424,8 +392,8 @@ class CorpusAndReplayTests(unittest.TestCase):
                         ["snils", "000-000-001 01", "speaker"],
                     ],
                     [
-                        "Поправка. Мой СНИЛС: 000-000-000 16. ИНН: 000000012373.",
-                        ["snils", "000-000-000 16", "speaker"],
+                        "Поправка. Мой СНИЛС: 000-000-002 02. ИНН: 000000012373.",
+                        ["snils", "000-000-002 02", "speaker"],
                         ["individual_inn", "000000012373", "speaker"],
                     ],
                 ],

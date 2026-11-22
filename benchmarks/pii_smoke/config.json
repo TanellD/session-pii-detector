@@ -11,19 +11,10 @@
     "phone number": "PHONE",
     "email": "EMAIL",
     "address": "ADDRESS",
-    "date of birth": "DATE_OF_BIRTH",
     "age": "AGE",
     "city": "CITY",
     "organization": "ORGANIZATION",
     "job title": "OCCUPATION",
-    "family relationship": "RELATIONSHIP",
-    "gender": "GENDER",
-    "health condition": "SPECIAL_CATEGORY",
-    "religion": "SPECIAL_CATEGORY",
-    "political view": "SPECIAL_CATEGORY",
-    "nationality": "SPECIAL_CATEGORY",
-    "philosophical belief": "SPECIAL_CATEGORY",
-    "intimate life": "SPECIAL_CATEGORY",
-    "criminal conviction": "SPECIAL_CATEGORY"
+    "gender": "GENDER"
   }
 }
