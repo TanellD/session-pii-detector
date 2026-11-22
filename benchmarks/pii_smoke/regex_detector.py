@@ -219,13 +219,13 @@ def predict_initials(text):
     return deduped
 
 
-def predict(text):
+def predict(text, *, require_valid_checksum=True):
     result = []
     for kind, pattern, validator in PATTERNS:
         for match in pattern.finditer(text):
             if kind == "PHONE" and not valid_phone_span(text, match.start("value"), match.end("value")):
                 continue
-            if validator is None or validator(match.group("value")):
+            if validator is None or not require_valid_checksum or validator(match.group("value")):
                 result.append(
                     {
                         "type": kind,
