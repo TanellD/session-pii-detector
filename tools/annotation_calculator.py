@@ -17,7 +17,7 @@ else:
 
 ROOT = Path(__file__).resolve().parents[1]
 RED = {"passport", "snils", "individual_inn", "bank_card"}
-TYPES = RED | {"phone", "email", "fio", "first_name", "last_name", "patronymic", "sex", "age", "occupation", "organization", "geography", "address", "relationship"}
+TYPES = RED | {"person", "phone", "email", "fio", "first_name", "last_name", "patronymic", "sex", "age", "occupation", "organization", "geography", "address", "relationship"}
 
 
 def normalize_state(facts):
@@ -80,6 +80,8 @@ class Calculator:
         reasons = []
         unresolved = []
         estimates = []
+        if by_type["person"]:
+            unresolved.append("Общий PERSON сохранён; части имени и статистическое правило не определены")
         if by_type["age"]:
             unresolved.append("Возраст выделен; проверенный совместный возрастной справочник ещё не подключён")
         rule_codes = []
@@ -289,19 +291,25 @@ class Calculator:
                 if key in fact and not isinstance(fact[key], bool):
                     raise ValueError("Флаги должны быть логическими значениями")
             person_id = fact.get("person_id")
-            if person_id is not None and (not isinstance(person_id, str) or not person_id.strip()):
-                raise ValueError("Нужен непустой идентификатор человека либо null")
+            if __package__:
+                from .ownership import owner_ids
+            else:
+                from ownership import owner_ids
+            owners = owner_ids(person_id)
             if person_id is None:
                 unassigned += 1
                 triggered = fact["type"] in RED and fact.get("complete")
                 reason = "red_rule" if triggered else None
                 pending = False
             else:
-                people[person_id].append(fact)
-                assessment = self.person(people[person_id])
-                triggered = assessment["alert"] is True
-                reason = assessment["alert_reason"]
-                pending = assessment["alert"] is None
+                assessments = []
+                for owner in owners:
+                    people[owner].append({**fact, "person_id": owner})
+                    assessments.append(self.person(people[owner]))
+                triggered = any(a["alert"] is True for a in assessments)
+                reason = next((r for r in ("red_rule", "combination_rule", "candidate_count_rule")
+                               if any(a["alert_reason"] == r for a in assessments)), None)
+                pending = any(a["alert"] is None for a in assessments)
             attribute_history.append({"attribute_index": index, "alert": bool(triggered),
                                       "annotation_uncertain": pending})
             if triggered and first_alert is None:

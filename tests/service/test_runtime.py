@@ -11,6 +11,7 @@ sys.path[:0] = [str(ROOT/'src'),str(ROOT)]
 
 from fastapi.testclient import TestClient
 from session_pii.app import create_app
+from session_pii.detectors import DetectorSettings
 from session_pii.components import DetectionResult, LinkResult
 from session_pii.models import AnalyzeRequest, EntityType, Span
 from session_pii.service import Settings
@@ -62,7 +63,7 @@ class RuntimeTests(unittest.TestCase):
         return self.state
 
     def test_default_stubs_are_explicitly_incomplete(self):
-        client = TestClient(create_app())
+        client = TestClient(create_app(detector_settings=DetectorSettings(mode="stub")))
         state = client.post('/v1/sessions',json={'session_id':'synthetic'}).json()
         result = client.post('/v1/analyze',json=self.payload('Моя почта testimir@example.invalid.',state)).json()
         self.assertFalse(result['verdict']['session_alert'])

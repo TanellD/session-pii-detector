@@ -10,6 +10,7 @@ from tools.annotation_calculator import RED
 
 from .components import Fact
 from .models import EntityType, Model, RiskAssessment
+from .normalization import fact_value
 
 NAME_PARTS = {'first_name', 'last_name', 'patronymic'}
 PAIRS = {frozenset(('first_name', 'last_name')): 'fi',
@@ -49,9 +50,15 @@ class RiskEvaluator:
         # Неизвестные факты не считаем одним лицом: удаляем только точные повторы.
         personal = tuple(f for f in facts if not f.service_contact)
         if unknown:
-            active = {(f.type, f.value.strip().casefold()): f for f in personal}
+            active = {(f.type, fact_value(f.type, f.value)): f for f in personal}
             kinds = [f.type for f in active.values()]
         else:
+            typed = {fact_value(f.type, f.value) for f in personal if f.type in NAME_PARTS}
+            tokens = {token for value in typed for token in value.split()}
+            # Уточнение той же части/набора частей не даёт второй вес PERSON.
+            personal = tuple(f for f in personal if f.type != 'person' or not (
+                fact_value(f.type, f.value) in typed or
+                (tokens and set(fact_value(f.type, f.value).split()) <= tokens)))
             kinds = list(dict.fromkeys(f.type for f in personal))
             parts = NAME_PARTS.intersection(kinds)
             if len(parts) >= 2:

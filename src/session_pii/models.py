@@ -1,9 +1,10 @@
 """Публичный контракт HTTP; спаны используют Unicode code points [start, end)."""
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from tools.ownership import owner_ids
 
-EntityType = Literal['first_name', 'last_name', 'patronymic', 'sex', 'age',
+EntityType = Literal['person', 'first_name', 'last_name', 'patronymic', 'sex', 'age',
                      'geography', 'occupation', 'organization', 'phone', 'email',
                      'address', 'passport', 'snils', 'individual_inn', 'bank_card']
 Rule = Literal['red_rule', 'combination_rule', 'candidate_count_rule', 'score_rule']
@@ -35,10 +36,34 @@ class ResetRequest(Model):
     expected_state_version: int = Field(ge=0)
 
 
+class MentionOrigin(Model):
+    mention_id: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+    detector_version: str = Field(min_length=1)
+    confidence: float | None = None
+    confidence_kind: Literal['none', 'model_score'] = 'none'
+
+
+class MentionKey(Model):
+    session_id: str
+    session_epoch: str
+    message_id: int
+    mention_id: str
+
+
+class SuppressedSpan(Model):
+    type: EntityType
+    start: int
+    end: int
+    reason: str
+    kept_type: EntityType
+
+
 class Span(Model):
     type: EntityType
     start: int = Field(ge=0)
     end: int = Field(ge=1)
+    provenance: tuple[MentionOrigin, ...] = ()
     score: float | None = None  # Исходная оценка компонента, не вероятность ПДн.
 
 
@@ -48,8 +73,15 @@ class Candidate(Span):
 
 class Entity(Candidate):
     id: str
-    person_id: str | None
+    person_id: str | tuple[str, ...] | None
     service_contact: bool = False
+    mention_keys: tuple[MentionKey, ...] = ()
+
+    @field_validator('person_id')
+    @classmethod
+    def check_owners(cls, value):
+        owner_ids(value)
+        return value
 
 
 class RiskAssessment(Model):
@@ -86,6 +118,7 @@ class Snapshot(Model):
 
 class AnalyzeResponse(Snapshot):
     entities: tuple[Entity, ...]
+    suppressed: tuple[SuppressedSpan, ...] = ()
 
 
 class MessageSummary(Model):

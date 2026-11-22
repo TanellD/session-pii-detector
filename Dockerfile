@@ -12,7 +12,9 @@ RUN pip install --no-cache-dir -r requirements-service.lock.txt \
 COPY src/session_pii ./src/session_pii
 COPY configs/annotation-estimator-policy.json ./configs/annotation-estimator-policy.json
 COPY configs/runtime-risk-policy.json ./configs/runtime-risk-policy.json
-COPY tools/annotation_calculator.py tools/annotation_contract.py tools/estimate_occupation_candidates.py ./tools/
+COPY benchmarks/adapter/__init__.py benchmarks/adapter/adapter.py benchmarks/adapter/adapter_contract.py benchmarks/adapter/adapter_rules.py benchmarks/adapter/_rules_impl.py ./benchmarks/adapter/
+COPY benchmarks/pii_smoke/config.json benchmarks/pii_smoke/regex_detector.py benchmarks/pii_smoke/phone_format.py benchmarks/pii_smoke/prepare.py ./benchmarks/pii_smoke/
+COPY tools/annotation_calculator.py tools/annotation_contract.py tools/ownership.py tools/estimate_occupation_candidates.py ./tools/
 
 USER 10001
 EXPOSE 8000

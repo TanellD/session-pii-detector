@@ -2,17 +2,19 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from .models import Candidate, Message, Span
+from .models import Candidate, Message, Span, MentionOrigin, MentionKey
 
 
 @dataclass(frozen=True)
 class Fact:
     type: str
     value: str
-    person_id: str | None
+    person_id: str | tuple[str, ...] | None
     entity_id: str
     message_id: int
     service_contact: bool = False
+    provenance: tuple[MentionOrigin, ...] = ()
+    mention_keys: tuple[MentionKey, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -24,8 +26,8 @@ class DetectionResult:
 
 @dataclass(frozen=True)
 class LinkResult:
-    # Ровно один владелец на каждый входной Candidate, в том же порядке.
-    person_ids: tuple[str | None, ...]
+    # Одна запись на Candidate: ID, tuple владельцев либо None.
+    person_ids: tuple[str | tuple[str, ...] | None, ...]
     complete: bool = True
     reasons: tuple[str, ...] = ()
     # Необязательно: маска служебных phone/email, исключаемых из риска.
@@ -60,3 +62,9 @@ class StubLinker:
         # known_facts неизменяем; прежние неизвестные владельцы не переназначаются.
         return LinkResult(tuple(None for _ in candidates), complete=False,
                           reasons=('linker_not_configured',))
+
+
+class EmptyDetector:
+    """Пустая вторая стадия: объединённый адаптер уже выполнил regex."""
+    def detect(self, message: Message) -> DetectionResult:
+        return DetectionResult()

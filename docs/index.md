@@ -4,7 +4,7 @@
 
 ## Проект
 
-- [Сборка Docker-сервиса, API и подключение NER/regexp/линкера](api/service-scaffold.md)
+- [Сессионный сервис, адаптер и правила интеграции](api/service-scaffold.md)
 
 - [Изменения классов, адресного этапа, API и метрик для команды](project/annotation-team-handoff.md)
 
@@ -27,9 +27,11 @@
 
 ## Исследование
 
-- [Суммарный риск по людям и неизвестным фактам](experiments/2026-11-20-runtime-risk.md)
+- [Проверка интеграции адаптера с сервисом](experiments/2026-11-22-service-adapter-integration.md)
 
-- [Проверка сборки HTTP-каркаса в Docker](experiments/2026-11-20-service-scaffold.md)
+- [Завершение адаптера](experiments/2026-11-22-adapter-finalization.md) · [Миграция корпуса и совместные владельцы](experiments/2026-11-22-corpus-finalization.md)
+
+- [Оценка первого сессионного алерта на синтетике (#41)](experiments/2026-11-20-session-alert-baselines.md)
 
 - [Сто синтетических сессий: уточнённая инструкция и последовательная Gemma](experiments/2026-11-19-annotation-100-gemma.md)
 
@@ -83,12 +85,18 @@
 - [ПДн и момент перехода сессии в ПДн](kb/pii-definition.md)
 - [Линковка сущностей](kb/entity-linking.md)
 - [Метрики](kb/metrics.md)
+- [Нормализация упоминаний](kb/normalization.md)
+- [Контракт упоминания адаптера](research/notes/mention-contract.md)
+- [Архитектура адаптера](research/notes/adapter-design.md)
+- [Покрытие и ограничения адаптера v2](research/notes/adapter-coverage.md)
 - [Открытые вопросы перед замером метрик](project/metrics-open-questions.md)
 - [Проект ТЗ на разметку для метрик](data/metrics-annotation-requirements.md)
 - [Бюджет латенси](kb/latency-budget.md)
 - [Архитектура](kb/architecture.md)
 
 ## Данные
+
+- [Синтетический корпус и разметка первого алерта (#33, #40)](data/session-alerts-pilot.md)
 
 - [Шаблоны пользовательских сессий и последовательная разметка без будущего](data/user-only-synthetic-sessions.md)
 

@@ -29,6 +29,6 @@ jobs:
       - run: python -m pip install -r requirements-service-test.txt
       - run: python -X utf8 -m unittest discover -s tests/service -v
       - run: docker compose up --build -d --wait --wait-timeout 60
-      - run: python -X utf8 tools/smoke_service.py
+      - run: python -X utf8 tools/smoke_service.py --expect-adapter
       - if: always()
         run: docker compose down

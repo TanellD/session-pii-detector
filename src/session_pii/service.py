@@ -126,7 +126,8 @@ class SessionService:
             if entry.version>=self.settings.max_messages:
                 raise ServiceError(413,'MESSAGE_LIMIT_REACHED',self._snapshot(entry))
             try:
-                step = self.pipeline.process(request.message,entry.facts,entry.verdict)
+                step = self.pipeline.process(request.message,entry.facts,entry.verdict,
+                                             session_id=entry.session_id,session_epoch=entry.epoch)
             except Exception:
                 # Ошибка компонента может содержать исходный текст: наружу не передаём.
                 raise ServiceError(502,'PIPELINE_FAILURE',self._snapshot(entry)) from None
@@ -136,7 +137,7 @@ class SessionService:
             response = AnalyzeResponse(session_id=entry.session_id,session_epoch=entry.epoch,
                                        state_version=entry.version+1,next_message_id=entry.version+2,
                                        policy_version=self.pipeline.policy_version,
-                                       verdict=step.verdict,entities=step.entities)
+                                       verdict=step.verdict,entities=step.entities,suppressed=step.suppressed)
             summary = MessageSummary(message_id=request.message.message_id,
                                      session_alert=step.verdict.session_alert,
                                      annotation_uncertain=step.verdict.annotation_uncertain,

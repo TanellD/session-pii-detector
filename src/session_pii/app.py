@@ -4,6 +4,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from .components import StubLinker, StubNER, StubRegexp
+from .detectors import DetectorSettings, build_detectors
 from .models import AnalyzeRequest, AnalyzeResponse, CreateSession, ResetRequest, SessionDetail, Snapshot
 from .pipeline import Pipeline
 from .risk import RiskEvaluator
@@ -11,14 +12,17 @@ from .service import ServiceError, SessionService, Settings
 
 
 def create_app(*, ner=None, regexp=None, linker=None, evaluator: RiskEvaluator | None = None,
-               settings: Settings | None = None):
-    # Замените только эти объекты собственными реализациями Protocol.
+               settings: Settings | None = None, detector_settings: DetectorSettings | None = None):
+    detection = detector_settings or DetectorSettings.from_env()
+    if ner is None and regexp is None:
+        ner, regexp = build_detectors(detection)
+    # Явно переданные компоненты сохраняют прежний интерфейс Protocol.
     pipeline = Pipeline(ner if ner is not None else StubNER(),
                         regexp if regexp is not None else StubRegexp(),
                         linker if linker is not None else StubLinker(), evaluator)
     service = SessionService(pipeline,settings)
     app = FastAPI(title='Session PII scaffold',version='0.1.0',
-                  description='Каркас со стадиями-заглушками. Текущая сборка не является готовым детектором.')
+                  description='Сессионный сервис с адаптером извлечения и заменяемым линкером.')
     app.state.service = service
 
     @app.exception_handler(ServiceError)
@@ -34,7 +38,7 @@ def create_app(*, ner=None, regexp=None, linker=None, evaluator: RiskEvaluator |
 
     @app.get('/healthz')
     def health():
-        return {'status':'ok','mode':'scaffold','policy_version':pipeline.policy_version}
+        return {'status':'ok','mode':detection.mode,'policy_version':pipeline.policy_version}
 
     @app.post('/v1/sessions',response_model=Snapshot,status_code=201)
     def create(payload: CreateSession):

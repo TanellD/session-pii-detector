@@ -11,7 +11,7 @@ POLICY_PATH = ROOT / "configs/annotation-estimator-policy.json"
 def build_context():
     policy_bytes = POLICY_PATH.read_bytes()
     policy = json.loads(policy_bytes)
-    return {"context_version": "annotation-context-v1", "policy": policy,
+    return {"context_version": "annotation-context-v2-multi-owner", "policy": policy,
         "policy_sha256": hashlib.sha256(policy_bytes).hexdigest(),
         "computation_owner": "annotation_contract_and_annotation_calculator",
         "llm_task": "extract_entities_and_person_links; do_not_invent_population_coefficients",
@@ -22,6 +22,8 @@ def build_context():
             "street_population_coefficient": policy["address"]["partial_coefficient"]},
         "interpretation": [
             "A null person_id is not by itself uncertainty about the alert verdict",
+            "person_id may be one ID or a nonempty list of distinct known owners; shared facts apply to each owner without merging people",
+            "An ownership list means joint ownership, never alternative uncertain candidates",
             "Unlinked service contacts cannot supply a personal alert condition",
             "Explicit first-person ownership is allowed; pronoun chains are not resolved",
             "Uncertainty is a retained clarification marker; without a sufficient rule the binary alert is false",

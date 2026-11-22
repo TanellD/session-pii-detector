@@ -1,5 +1,5 @@
 {
-  "version": "runtime-risk-v1",
+  "version": "runtime-risk-v2",
   "person_threshold": 0.5,
   "unknown_threshold": 0.5,
   "weights": {
@@ -21,6 +21,7 @@
     "passport": 1.0,
     "snils": 1.0,
     "individual_inn": 1.0,
-    "bank_card": 1.0
+    "bank_card": 1.0,
+    "person": 0.1
   }
 }

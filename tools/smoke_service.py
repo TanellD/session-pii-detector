@@ -8,6 +8,7 @@ from uuid import uuid4
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base-url',default='http://127.0.0.1:8000')
+    parser.add_argument('--expect-adapter', action='store_true')
     args = parser.parse_args()
 
     def call(path, payload=None):
@@ -27,8 +28,17 @@ def main():
     assert response==retry
     assert snapshot['state_version']==1 and len(snapshot['message_history'])==1
     assert not response['verdict']['session_alert']
-    print(json.dumps(dict(status='ok',mode=health['mode'],state_version=snapshot['state_version'],
-                          exact_retry=True,coverage_complete=response['verdict']['coverage_complete'],
+    if args.expect_adapter:
+        assert health['mode'] in ('regex', 'gliner')
+        extracted = call('/v1/analyze', dict(session_id=state['session_id'],
+            session_epoch=state['session_epoch'], expected_state_version=1,
+            message=dict(message_id=2, role='user', text='СНИЛС: 000-000-001 01.')))
+        assert [e['type'] for e in extracted['entities']] == ['snils']
+        assert extracted['entities'][0]['mention_keys'][0]['session_id'] == state['session_id']
+        assert extracted['verdict']['first_alert_message_id'] == 2
+        assert extracted['verdict']['first_alert_reason'] == 'red_rule'
+    print(json.dumps(dict(status='ok' ,mode=health['mode'],state_version=snapshot['state_version'],
+                          exact_retry=True,extraction_checked=args.expect_adapter,coverage_complete=response['verdict']['coverage_complete'],
                           incomplete_reasons=response['verdict']['incomplete_reasons']),ensure_ascii=False))
 
 

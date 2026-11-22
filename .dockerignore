@@ -12,3 +12,17 @@
 !tools/annotation_calculator.py
 !tools/annotation_contract.py
 !tools/estimate_occupation_candidates.py
+
+!tools/ownership.py
+!benchmarks/
+!benchmarks/adapter/
+!benchmarks/adapter/__init__.py
+!benchmarks/adapter/adapter.py
+!benchmarks/adapter/adapter_contract.py
+!benchmarks/adapter/adapter_rules.py
+!benchmarks/adapter/_rules_impl.py
+!benchmarks/pii_smoke/
+!benchmarks/pii_smoke/config.json
+!benchmarks/pii_smoke/regex_detector.py
+!benchmarks/pii_smoke/phone_format.py
+!benchmarks/pii_smoke/prepare.py
