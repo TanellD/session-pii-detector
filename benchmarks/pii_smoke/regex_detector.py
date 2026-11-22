@@ -1,6 +1,7 @@
 """Small diagnostic rules; checksum validity is not proof of an assigned identity."""
 
 import re
+from .phone_format import PHONE_BODY, valid_phone_span
 
 
 def digits(value):
@@ -53,7 +54,7 @@ PATTERNS = [
     (
         "PHONE",
         re.compile(
-            r"(?<!\d)(?P<value>(?:\+7|8)[ -]?\(?\d{3}\)?[ -]?\d{3}[ -]?\d{2}[ -]?\d{2})(?!\d)"
+            rf"(?<![0-9])(?P<value>{PHONE_BODY})(?![0-9])"
         ),
         None,
     ),
@@ -222,6 +223,8 @@ def predict(text):
     result = []
     for kind, pattern, validator in PATTERNS:
         for match in pattern.finditer(text):
+            if kind == "PHONE" and not valid_phone_span(text, match.start("value"), match.end("value")):
+                continue
             if validator is None or validator(match.group("value")):
                 result.append(
                     {
@@ -232,7 +235,6 @@ def predict(text):
                         "source": "regex",
                     }
                 )
-    result.extend(predict_initials(text))
     result.extend(predict_address_chains(text))
     return result
 

@@ -8,9 +8,10 @@ try:
 except ImportError:
     NamesParser = None
 
-from benchmarks.pii_smoke.regex_detector import valid_inn
+from benchmarks.pii_smoke.regex_detector import valid_inn, valid_snils, valid_luhn
+from benchmarks.pii_smoke.phone_format import valid_phone_span
 
-RULES_VERSION = "pii_smoke_rules-v2"
+RULES_VERSION = "pii_smoke_rules-v3"
 
 OCCUPATION_WORDS = {
     "директор",
@@ -418,15 +419,31 @@ def _two_token_with_role(message, entity, tokens):
     ]
 
 
+NAME_TOKEN = r"[А-ЯЁа-яё]+(?:[-‐‑][А-ЯЁа-яё]+)*"
+NAME_CONTEXT = (("FIRST_NAME", "имя"), ("LAST_NAME", "фамилия|фамилии"),
+                ("PATRONYMIC", "отчество|отчества"))
+
+def extract_name_context(message):
+    result = []
+    for kind, cue in NAME_CONTEXT:
+        pattern = rf"\b(?:{cue})\s*(?:[:—–-]\s*)?(?P<value>{NAME_TOKEN})"
+        for match in re.finditer(pattern, message, re.I):
+            value = match.group("value")
+            if value.casefold() in PRONOUNS or len(value) < 2:
+                continue
+            result.append(dict(type=kind, start=match.start("value"), end=match.end("value"),
+                               source="regex", score=None, detector_version=RULES_VERSION))
+    return result
+
+
 def split_person(message, entity):
     start, end = entity["start"], entity["end"]
     fragment = message[start:end]
     core = fragment.strip()
     frag_offset = start + len(fragment) - len(fragment.lstrip())
 
-    initials = _initials_parts(core, entity, message)
-    if initials:
-        return initials
+    if any(len(token.rstrip('.')) < 2 or '.' in token for token in core.split()):
+        return []  # Initials are outside the agreed MVP annotation scope.
 
     tokens = fragment.split()
 
@@ -466,7 +483,7 @@ def split_person(message, entity):
                 continue
             found = _find_value(core, frag_offset, value)
             if found is None:
-                position = message.find(value, frag_offset)
+                position = message.find(value, frag_offset, end)
                 if position < 0:
                     break
                 found = (position, position + len(value))
@@ -482,33 +499,6 @@ def split_person(message, entity):
         expected = sum(char.lower() in _KIND_BY_CHAR for char in parsed["format"])
         if parts and len(parts) == expected:
             return sorted(parts, key=lambda part: (part["start"], part["end"]))
-
-    surname_match = re.search(r"(?:фамилия|фамилии)\s+(.+?)(?:[.,]|$)", message, re.I)
-    patronymic_match = re.search(r"(?:отчество|отчества)\s+([^ .,]+)", message, re.I)
-    if surname_match:
-        value = surname_match.group(1).strip()
-        position = message.find(value, start)
-        if position >= 0:
-            return [
-                {
-                    **entity,
-                    "type": "LAST_NAME",
-                    "start": position,
-                    "end": position + len(value),
-                }
-            ]
-    if patronymic_match:
-        value = patronymic_match.group(1).strip()
-        position = message.find(value, start)
-        if position >= 0:
-            return [
-                {
-                    **entity,
-                    "type": "PATRONYMIC",
-                    "start": position,
-                    "end": position + len(value),
-                }
-            ]
 
     if len(tokens) == 3:
         position = start
@@ -549,7 +539,7 @@ def split_person(message, entity):
         if "зовут" in message[:start].lower():
             return [{**entity, "type": "FIRST_NAME"}]
         return [{**entity, "type": "PERSON"}]
-    return [{**entity, "type": "FULL_NAME"}]
+    return [{**entity, "type": "PERSON"}]
 
 
 def merge_organizations(message, entities):
@@ -593,6 +583,10 @@ def resolve_conflicts(message, entities):
             value = message[entity["start"] : entity["end"]].strip().lower()
             if value in PRONOUNS:
                 continue
+        if entity["type"] in {"INN", "SNILS", "CARD"}:
+            check = {"INN": valid_inn, "SNILS": valid_snils, "CARD": valid_luhn}[entity["type"]]
+            if not check(message[entity["start"]:entity["end"]]):
+                continue
         if entity["type"] == "ORGANIZATION":
             value = message[entity["start"] : entity["end"]].strip().lower()
             words = value.split()
@@ -600,30 +594,16 @@ def resolve_conflicts(message, entities):
                 continue
         if entity["type"] == "PHONE":
             value = message[entity["start"] : entity["end"]].strip()
-            if not RU_PHONE_RE.match(value):
+            if not valid_phone_span(message, entity["start"], entity["end"]):
                 continue
             if any(overlap(entity, phone) for phone in suppressed_phones):
                 continue
 
-        replaced = False
-        new_result = []
-        for existing in result:
-            if existing["type"] == entity["type"] and overlap(existing, entity):
-                existing_len = existing["end"] - existing["start"]
-                entity_len = entity["end"] - entity["start"]
-                if entity_len > existing_len:
-                    replaced = True
-                    continue
-                else:
-                    replaced = True
-                    new_result.append(existing)
-                    break
-            new_result.append(existing)
-        if not replaced or not any(
-            e["type"] == entity["type"] and overlap(e, entity) for e in new_result
-        ):
-            new_result.append(entity)
-        result = new_result
+        overlaps = [e for e in result if e["type"] == entity["type"] and overlap(e, entity)]
+        if overlaps and any(e["end"] - e["start"] >= entity["end"] - entity["start"] for e in overlaps):
+            continue
+        result = [e for e in result if e not in overlaps]
+        result.append(entity)
 
     return sorted(
         result, key=lambda entity: (entity["start"], entity["end"], entity["type"])
@@ -642,6 +622,8 @@ def apply_rules(message, entities, detector_version=None):
     validate_spans(message, entities)
     result = []
     for entity in entities:
+        if entity["type"] in {"DATE_OF_BIRTH", "RELATIONSHIP", "SPECIAL_CATEGORY"}:
+            continue
         if entity["type"] == "PERSON":
             value = message[entity["start"] : entity["end"]].strip().lower()
             if value in OCCUPATION_WORDS:
@@ -649,20 +631,14 @@ def apply_rules(message, entities, detector_version=None):
                     {**entity, "type": "OCCUPATION", "detector_version": RULES_VERSION}
                 )
                 continue
-            if value in RELATIONSHIP_WORDS:
-                result.append(
-                    {
-                        **entity,
-                        "type": "RELATIONSHIP",
-                        "detector_version": RULES_VERSION,
-                    }
-                )
-                continue
             result.extend(split_person(message, entity))
         else:
             result.append(entity)
-    result = reclassify_emails(message, result)
-    result = enrich_dob(message, result)
+    # Explicit contextual types take precedence only on their own spans.
+    context = extract_name_context(message)
+    result = [e for e in result if not any(overlap(e, c) and e["type"] in
+              {"PERSON", "FIRST_NAME", "LAST_NAME", "PATRONYMIC"} for c in context)]
+    result.extend(context)
     result = merge_addresses(message, result)
     result = merge_organizations(message, result)
     return resolve_conflicts(message, result)

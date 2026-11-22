@@ -15,6 +15,7 @@ from benchmarks.adapter.adapter_rules import RULES_VERSION
 # Source: configs/annotation-classes.json (PR, not in main yet).
 
 ADAPTER_TO_GOLD = {
+    "PERSON": "person",
     "FIRST_NAME": "first_name",
     "LAST_NAME": "last_name",
     "PATRONYMIC": "patronymic",
@@ -33,7 +34,7 @@ ADAPTER_TO_GOLD = {
     "CARD": "bank_card",
 }
 OUT_OF_SCOPE = {"DATE_OF_BIRTH", "RELATIONSHIP", "SPECIAL_CATEGORY"}
-UNMAPPED = {"PERSON", "FULL_NAME"}
+UNMAPPED = {"FULL_NAME"}
 
 
 def load_gold(path):
