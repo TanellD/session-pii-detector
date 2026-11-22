@@ -84,3 +84,13 @@ nearest-rank по всем повторам. Загрузка и прогрев 
 Это не HTTP-латенси и не нагрузочный тест. Совпадение скорости на другом железе
 не обещается. Повторы должны давать одинаковые predictions, иначе run завершается
 ошибкой. Межтиповые конфликты сохранены как свойство исследуемого baseline.
+
+## Пробный прогон адаптера
+
+Проверка адаптера вынесена в отдельный пакет `benchmarks/adapter/`.
+Команды приведены в его документации:
+
+```powershell
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.adapter.adapter_check --output runs/adapter-check/regex-only.json
+.\.venv-task12-locked\Scripts\python.exe -m benchmarks.adapter.adapter_check --with-model --output runs/adapter-check/with-model.json
+```
