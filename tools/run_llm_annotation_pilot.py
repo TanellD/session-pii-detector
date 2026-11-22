@@ -21,7 +21,9 @@ def annotation_schema():
     string = {"type": "string"}
     entity = object_schema({"id": string, "message_id": string, "start": {"type": "integer"},
         "end": {"type": "integer"}, "type": {"type": "string", "enum": sorted(ANNOTATION_TYPES)},
-        "person_id": {"type": ["string", "null"]}})
+        "person_id": {"anyOf": [{"type": "string", "minLength": 1},
+            {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 1, "uniqueItems": True},
+            {"type": "null"}]}})
     flags = object_schema({"is_example": {"type": "boolean"}, "annotation_uncertain": {"type": "boolean"},
         "clarification_reason": {"type": ["string", "null"],
             "enum": [None, "insufficient_statistics", "specification_gap", "person_attribution"]}})

@@ -36,8 +36,10 @@ def groups(doc):
         if entity['person_id'] is None:
             unknown.add(key(entity))
         else:
-            people.setdefault(entity['person_id'], set()).add(key(entity))
-    return {frozenset(v) for v in people.values()}, unknown
+            owners = entity['person_id'] if isinstance(entity['person_id'], list) else [entity['person_id']]
+            for owner in owners:
+                people.setdefault(owner, set()).add(key(entity))
+    return Counter(frozenset(v) for v in people.values()), unknown
 
 
 def compare(gold_dir, run):

@@ -6,7 +6,15 @@ import json
 from pathlib import Path
 import re
 
-from annotation_calculator import Calculator, RED, TYPES
+if __package__:
+    from .annotation_calculator import Calculator, RED, TYPES
+else:
+    from annotation_calculator import Calculator, RED, TYPES
+
+if __package__:
+    from .ownership import owner_ids
+else:
+    from ownership import owner_ids
 
 VERSION = "annotation-mvp-v2"
 LEGACY_VERSION = "annotation-mvp-v1"
@@ -56,8 +64,9 @@ def validate(document):
                 or entity["message_id"] not in messages or entity["type"] not in (ANNOTATION_TYPES if modern else TYPES)):
             raise ValueError("Неизвестное сообщение или тип сущности")
         person = entity["person_id"]
-        if person is not None and (not isinstance(person, str) or not person.strip()):
-            raise ValueError("person_id должен быть непустой строкой или null")
+        if isinstance(person, tuple):
+            raise ValueError("JSON-владельцы должны быть строкой, списком или null")
+        owner_ids(person)
         start, end = entity["start"], entity["end"]
         text = messages[entity["message_id"]]
         if type(start) is not int or type(end) is not int or not 0 <= start < end <= len(text):
@@ -126,7 +135,8 @@ def assess(document, calculator=None, address_enrichment=None):
             if fact["person_id"] is None:
                 unknown.append(fact)
             else:
-                people[fact["person_id"]].append(fact)
+                for person in owner_ids(fact["person_id"]):
+                    people[person].append({**fact, "person_id": person})
         # Проверяем завершённое сообщение: порядок спанов внутри него
         # не должен создавать отдельный исторический алерт до исправления.
         assessments = {person: calculator.person(rows) for person, rows in people.items()}
@@ -144,7 +154,7 @@ def assess(document, calculator=None, address_enrichment=None):
                 evidence = [f["entity_id"] for p, rows in people.items()
                             if assessments[p]["alert_reason"] == reason for f in rows]
             first_alert = {"message_id": message["id"], "message_index": index,
-                           "reason": reason, "context_entity_ids": evidence}
+                           "reason": reason, "context_entity_ids": list(dict.fromkeys(evidence))}
         # Неизвестная принадлежность хранится в person_id=null. Это не
         # неопределённость вердикта: такие факты не объединяются с персонами.
         unlinked_pending = bool(unknown) and calculator.policy.get("annotation_semantics", {}).get(

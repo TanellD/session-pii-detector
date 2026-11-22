@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-18-working-v2",
-  "taxonomy_version": "mvp-name-parts-age-v1",
+  "version": "2026-11-22-working-v3",
+  "taxonomy_version": "mvp-name-parts-person-age-v2",
   "status": "working_decisions_not_annotation_guideline_release",
   "statistics_selection": "latest_verified_per_indicator_and_geography",
   "allow_silent_old_source_fallback": false,
@@ -17,12 +17,36 @@
     "reproduce": "python -X utf8 tools/summarize_organization_sizes.py --show"
   },
   "settlement_population_bands": [
-    {"id": "under_1000", "min_inclusive": 0, "max_exclusive": 1000},
-    {"id": "1000_to_10000", "min_inclusive": 1000, "max_exclusive": 10000},
-    {"id": "10000_to_100000", "min_inclusive": 10000, "max_exclusive": 100000},
-    {"id": "100000_to_500000", "min_inclusive": 100000, "max_exclusive": 500000},
-    {"id": "500000_to_1000000", "min_inclusive": 500000, "max_exclusive": 1000000},
-    {"id": "at_least_1000000", "min_inclusive": 1000000, "max_exclusive": null}
+    {
+      "id": "under_1000",
+      "min_inclusive": 0,
+      "max_exclusive": 1000
+    },
+    {
+      "id": "1000_to_10000",
+      "min_inclusive": 1000,
+      "max_exclusive": 10000
+    },
+    {
+      "id": "10000_to_100000",
+      "min_inclusive": 10000,
+      "max_exclusive": 100000
+    },
+    {
+      "id": "100000_to_500000",
+      "min_inclusive": 100000,
+      "max_exclusive": 500000
+    },
+    {
+      "id": "500000_to_1000000",
+      "min_inclusive": 500000,
+      "max_exclusive": 1000000
+    },
+    {
+      "id": "at_least_1000000",
+      "min_inclusive": 1000000,
+      "max_exclusive": null
+    }
   ],
   "address": {
     "full_requires": "house_identified_with_geographic_context",
@@ -78,9 +102,21 @@
     "reproduce": "python -X utf8 tools/build_housing_occupancy_reference.py",
     "region": "Российская Федерация",
     "units": {
-      "apartment": {"occupied_units": 42973744, "residents": 99496891, "mean": 2.315294915890968},
-      "individual_house": {"occupied_units": 15518553, "residents": 42083643, "mean": 2.7118277715712282},
-      "communal_apartment": {"occupied_units": 528432, "residents": 1527417, "mean": 2.890470297029703}
+      "apartment": {
+        "occupied_units": 42973744,
+        "residents": 99496891,
+        "mean": 2.315294915890968
+      },
+      "individual_house": {
+        "occupied_units": 15518553,
+        "residents": 42083643,
+        "mean": 2.7118277715712282
+      },
+      "communal_apartment": {
+        "occupied_units": 528432,
+        "residents": 1527417,
+        "mean": 2.890470297029703
+      }
     }
   },
   "automatic_address_estimation": {
@@ -98,13 +134,26 @@
     "enabled": true,
     "zone": "orange",
     "combinations": {
-      "fi": ["last_name", "first_name"],
-      "io": ["first_name", "patronymic"],
-      "fo": ["last_name", "patronymic"]
+      "fi": [
+        "last_name",
+        "first_name"
+      ],
+      "io": [
+        "first_name",
+        "patronymic"
+      ],
+      "fo": [
+        "last_name",
+        "patronymic"
+      ]
     },
     "status": "user_approved_working_rule_2026-11-17",
     "minimum_distinct_complete_name_parts": 2,
-    "additional_attributes": ["full_residential_address", "complete_personal_phone", "complete_personal_email"],
+    "additional_attributes": [
+      "full_residential_address",
+      "complete_personal_phone",
+      "complete_personal_email"
+    ],
     "full_name_alone_alert": false,
     "numerical_name_estimate": null
   },
@@ -128,7 +177,11 @@
   "organization_zone": "yellow",
   "size_fallbacks": {
     "method": "resident_weighted_mean",
-    "units": ["settlement", "street", "residential_building"],
+    "units": [
+      "settlement",
+      "street",
+      "residential_building"
+    ],
     "settlement_grouping": "settlement_type_and_region_then_type_national",
     "status": "calculated_reference_not_connected_to_estimator",
     "prepared_reference_path": "data/reference/proposed-population-size-means.json",
@@ -144,5 +197,7 @@
   "age_zone": "yellow",
   "age_reference_status": "official_source_identified_not_connected",
   "age_reference_catalog": "https://rosstat.gov.ru/compendium/document/13284",
-  "name_frequency_target": "all_residents_of_russia_all_ages"
+  "name_frequency_target": "all_residents_of_russia_all_ages",
+  "document_checksum": "extraction_filter",
+  "ownership_version": "ownership-v2"
 }
