@@ -109,7 +109,9 @@ def main():
     parser.add_argument('--env-file',type=Path)
     parser.add_argument('--config',type=Path,default=ROOT/'configs/linker-gemma-baseline.json')
     parser.add_argument('--ner-recordings',type=Path,help='Проверенный сохранённый реальный выход GLiNER+regex вместо эталонных спанов')
-    parser.add_argument('--adapter-revision',action='store_true',help='Применить отдельную зафиксированную ревизию адаптера к реальным выходам NER')
+    revisions=parser.add_mutually_exclusive_group()
+    revisions.add_argument('--adapter-revision',action='store_true',help='Применить зафиксированную ревизию v1')
+    revisions.add_argument('--adapter-revision-v2',action='store_true',help='Применить новую ревизию v2')
     parser.add_argument('--families',nargs='+',default=FAMILIES)
     parser.add_argument('--all-sessions',action='store_true',help='Все сессии снимка вместо малого пилота')
     parser.add_argument('--resume',action='store_true')
@@ -123,8 +125,8 @@ def main():
     legacy_synthetic=source.get('total_source_sessions')==1000 and all(r['session_id'].startswith('synthetic-') for r in source['records'])
     if not (explicitly_synthetic or legacy_synthetic) or any(not re.fullmatch(r'[A-Za-z0-9_-]+',r['session_id']) for r in source['records']):
         parser.error('Нужен явно синтетический снимок авторского корпуса')
-    if args.adapter_revision and not args.ner_recordings:
-        parser.error('--adapter-revision требует --ner-recordings')
+    if (args.adapter_revision or args.adapter_revision_v2) and not args.ner_recordings:
+        parser.error('Ревизия адаптера требует --ner-recordings')
     if args.report_only:
         if read(output/'manifest.json')['input_sha256']!=hashlib.sha256(args.input.read_bytes()).hexdigest():
             parser.error('Исходный снимок отличается от входа сохранённого запуска')
@@ -145,11 +147,17 @@ def main():
         identity.update(detector_mode='recorded-real-gliner-regex',
             detector_recordings_sha256=hashlib.sha256((args.ner_recordings/'detector-recordings.json').read_bytes()).hexdigest(),
             detector_identity=read(args.ner_recordings/'detector-recordings-identity.json'))
-        if args.adapter_revision:
-            identity.update(adapter_revision=ADAPTER_VERSION,
+        if args.adapter_revision or args.adapter_revision_v2:
+            adapter_class, adapter_version=RevisedAdapter, ADAPTER_VERSION
+            if args.adapter_revision_v2:
+                from session_pii.adapter_revision_v2 import RevisedAdapter as AdapterV2, VERSION as VERSION_V2
+                adapter_class, adapter_version=AdapterV2, VERSION_V2
+                identity['adapter_revision_v2_sha256']=hashlib.sha256(
+                    (ROOT/'src/session_pii/adapter_revision_v2.py').read_bytes()).hexdigest()
+            identity.update(adapter_revision=adapter_version,
                 adapter_revision_sha256=hashlib.sha256((ROOT/'src/session_pii/adapter_revision.py').read_bytes()).hexdigest())
-            identity['detector_mode']+='+'+ADAPTER_VERSION
-            recorded=RevisedAdapter(recorded)
+            identity['detector_mode']+='+'+adapter_version
+            recorded=adapter_class(recorded)
     if output.exists():
         if not args.resume:
             parser.error('Каталог существует; для продолжения используйте --resume')

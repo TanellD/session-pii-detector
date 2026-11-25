@@ -17,6 +17,7 @@ def main():
     parser.add_argument('--ner-recordings',type=Path,required=True)
     parser.add_argument('--env-file',type=Path,default=ROOT/'../../.env')
     parser.add_argument('--starts',type=int,default=4)
+    parser.add_argument('--adapter-version',choices=['v1','v2'],default='v1')
     parser.add_argument('--wait-for-extraction-summary',type=Path,help='Начать LLM-прогон после сохранения сравнения двух NER')
     args=parser.parse_args()
     run=args.run.resolve()
@@ -39,7 +40,8 @@ def main():
         attempt=offset+batch_attempt
         command=[sys.executable,'-X','utf8','-u',str(ROOT/'tools/evaluate_gemma_linker.py'),
             '--input',str(args.input.resolve()),'--ner-recordings',str(args.ner_recordings.resolve()),
-            '--adapter-revision','--all-sessions','--output',str(run/'results'),'--env-file',str(args.env_file.resolve())]
+            '--adapter-revision-v2' if args.adapter_version=='v2' else '--adapter-revision',
+            '--all-sessions','--output',str(run/'results'),'--env-file',str(args.env_file.resolve())]
         if (run/'results/manifest.json').exists():
             command.append('--resume')
         status=dict(start=attempt,max_starts=offset+args.starts,batch_start=offset+1,

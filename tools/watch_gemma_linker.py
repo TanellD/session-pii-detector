@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import time
 
 from evaluate_gemma_linker import ROOT, summarize
@@ -34,6 +35,29 @@ def alive(pid):
 
 def render(run):
     output = run / 'results'
+    if not (output / 'manifest.json').exists() and (run / 'preparation.json').exists():
+        prep = json.loads((run / 'preparation.json').read_text(encoding='utf-8'))
+        pid = int((run / 'worker.pid').read_text().strip())
+        active = alive(pid)
+        log = run / 'logs/worker-stdout.log'
+        matches = re.findall(r'Inference completed: (\d+) unique texts',
+                             log.read_text(encoding='utf-8') if log.exists() else '')
+        count = int(matches[-1]) if matches else 0
+        text = '\n'.join(['# Сложные диалоги — NER v2 и Gemma', '',
+            f'Обновлено: {datetime.now(timezone.utc).isoformat(timespec="seconds")} (UTC).', '',
+            '**Подготовка реального NER**' if active else '**Процесс остановлен до запуска Gemma**', '',
+            f'Сессий: {prep["total_sessions"]}; сообщений: {prep["total_messages"]}.', '',
+            f'GLiNER: не менее {count}/{prep["unique_texts"]} уникальных текстов по журналу.', '',
+            'После сохранения NER автоматически запускается Pipeline с ревизией v2 и живым Gemma API.', '',
+            'Метрики полного сервиса пока отсутствуют. Строки прогресса NER появляются каждые 25 текстов.', '',
+            '[Журнал NER](logs/worker-stdout.log), [этап](stage.json).', '',
+            'Повторное обновление без API:', '', '```powershell',
+            f'.\\.venv-gliner\\Scripts\\python.exe -X utf8 tools/watch_gemma_linker.py --run {run.relative_to(ROOT).as_posix()} --once',
+            '```', ''])
+        temporary = run / 'live-progress.tmp'
+        temporary.write_text(text, encoding='utf-8')
+        temporary.replace(run / 'live-progress.md')
+        return not active
     input_path=output/'input-snapshot.json'
     if not input_path.exists():
         input_path=ROOT / 'data/experiments/random-linker-250-2026-11-24/snapshot.json'

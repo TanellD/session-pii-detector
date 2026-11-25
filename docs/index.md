@@ -1,5 +1,7 @@
 # База знаний проекта
 
+- [Сложные диалоги: 200 сессий, NER v2 и Gemma](experiments/2026-11-25-complex-200.md)
+
 - [NER v2: границы контактов и контекст ФИО](experiments/2026-11-25-adapter-v2.md)
 - [Точка продолжения](experiments/2026-11-25-ner-gemma-checkpoint.md)
 
