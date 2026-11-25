@@ -6,6 +6,8 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 
 
 def sha256(path):
@@ -30,6 +32,19 @@ def read_manifest(directory, config):
             "Prepared backbone must resolve locally; prepare again after moving it"
         )
     return manifest
+
+
+def prepare_fast_tokenizer(backbone):
+    """Конвертация того же SPM из ASCII-пути для Windows с кириллицей.
+
+    SentencePiece 0.2.1 не открывает абсолютный Unicode-путь в этом окружении.
+    Отдельный процесс читает ./spm.model, не меняя cwd вызывающего процесса.
+    Последующие загрузки читают tokenizer.json через fast tokenizer.
+    """
+    subprocess.run([sys.executable, '-X', 'utf8', '-c',
+        "from transformers import AutoTokenizer; "
+        "t=AutoTokenizer.from_pretrained('.',local_files_only=True,from_slow=True); "
+        "assert t.is_fast; t.init_kwargs.pop('from_slow',None); t.save_pretrained('.')"], cwd=backbone, check=True)
 
 
 def main():
@@ -77,6 +92,7 @@ def main():
     for source in backbone.iterdir():
         if source.is_file():
             shutil.copyfile(source, output / "backbone" / source.name)
+    prepare_fast_tokenizer(output / "backbone")
     weights = output / "model.safetensors"
     if not weights.exists():
         try:

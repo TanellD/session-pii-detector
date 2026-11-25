@@ -27,7 +27,8 @@ class Pipeline:
         self.policy_version = self.evaluator.policy.version
 
     def process(self, message: Message, facts: tuple[Fact, ...], previous: Verdict, *,
-                session_id: str = "runtime", session_epoch: str = "runtime") -> Step:
+                session_id: str = "runtime", session_epoch: str = "runtime",
+                previous_messages: tuple[Message, ...] = ()) -> Step:
         candidates = {}
         incomplete = list(previous.incomplete_reasons)
         for name, detector in (('ner', self.ner), ('regexp', self.regexp)):
@@ -49,7 +50,9 @@ class Pipeline:
                     candidates[key] = Candidate(**span.model_dump(), sources=sources)
         ordered, suppressed = resolve(tuple(candidates[k] for k in sorted(candidates)))
         self._validate(message, ordered, tuple(None for _ in ordered))
-        linked = self.linker.link(message, ordered, facts)
+        contextual=getattr(self.linker,'link_with_context',None)
+        linked=(contextual(message,ordered,facts,previous_messages) if callable(contextual)
+                else self.linker.link(message, ordered, facts))
         if len(linked.person_ids) != len(ordered):
             raise ValueError('Linker must preserve entity count and order')
         if not linked.complete:

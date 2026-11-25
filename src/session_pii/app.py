@@ -3,11 +3,12 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from .components import StubLinker, StubNER, StubRegexp
+from .components import StubNER, StubRegexp
 from .detectors import DetectorSettings, build_detectors
 from .models import AnalyzeRequest, AnalyzeResponse, CreateSession, ResetRequest, SessionDetail, Snapshot
 from .pipeline import Pipeline
 from .risk import RiskEvaluator
+from .gemma_linker import build_linker
 from .service import ServiceError, SessionService, Settings
 
 
@@ -19,7 +20,7 @@ def create_app(*, ner=None, regexp=None, linker=None, evaluator: RiskEvaluator |
     # Явно переданные компоненты сохраняют прежний интерфейс Protocol.
     pipeline = Pipeline(ner if ner is not None else StubNER(),
                         regexp if regexp is not None else StubRegexp(),
-                        linker if linker is not None else StubLinker(), evaluator)
+                        linker if linker is not None else build_linker(), evaluator)
     service = SessionService(pipeline,settings)
     app = FastAPI(title='Session PII scaffold',version='0.1.0',
                   description='Сессионный сервис с адаптером извлечения и заменяемым линкером.')

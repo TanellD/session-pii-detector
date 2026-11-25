@@ -8,7 +8,7 @@ import time
 from uuid import uuid4
 
 from .components import Fact
-from .models import AnalyzeRequest, AnalyzeResponse, MessageSummary, SessionDetail, Snapshot, Verdict
+from .models import AnalyzeRequest, AnalyzeResponse, Message, MessageSummary, SessionDetail, Snapshot, Verdict
 from .pipeline import Pipeline
 
 
@@ -45,6 +45,7 @@ class Session:
     last_fingerprint: str | None = None
     last_response: AnalyzeResponse | None = None
     message_history: tuple[MessageSummary, ...] = ()
+    link_context: tuple[Message, ...] = ()
     lock: RLock = field(default_factory=RLock)
 
 
@@ -105,6 +106,7 @@ class SessionService:
             entry.epoch,entry.version,entry.facts,entry.verdict = uuid4().hex,0,(),Verdict()
             entry.last_fingerprint,entry.last_response = None,None
             entry.message_history = ()
+            entry.link_context = ()
             entry.expires_at = self.clock()+self.settings.ttl_seconds
             return self._snapshot(entry)
 
@@ -127,7 +129,8 @@ class SessionService:
                 raise ServiceError(413,'MESSAGE_LIMIT_REACHED',self._snapshot(entry))
             try:
                 step = self.pipeline.process(request.message,entry.facts,entry.verdict,
-                                             session_id=entry.session_id,session_epoch=entry.epoch)
+                                             session_id=entry.session_id,session_epoch=entry.epoch,
+                                             previous_messages=entry.link_context)
             except Exception:
                 # Ошибка компонента может содержать исходный текст: наружу не передаём.
                 raise ServiceError(502,'PIPELINE_FAILURE',self._snapshot(entry)) from None
@@ -144,6 +147,8 @@ class SessionService:
                                      clarification_reason=step.verdict.clarification_reason,
                                      coverage_complete=step.verdict.coverage_complete)
             entry.version += 1
+            window=getattr(self.pipeline.linker,'context_window',0)
+            entry.link_context=(entry.link_context+(request.message,))[-window:] if window else ()
             entry.facts,entry.verdict = step.facts,step.verdict
             entry.last_fingerprint,entry.last_response = fingerprint,response
             entry.message_history += (summary,)
