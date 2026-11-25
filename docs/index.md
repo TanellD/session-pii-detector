@@ -1,5 +1,23 @@
 # База знаний проекта
 
+- [Точка продолжения validation и подбора риска](experiments/2026-11-26-validation-checkpoint.md)
+
+- [Validation с кэшем моделей и автоматическим подбором весов и порогов риска](experiments/2026-11-26-cached-validation-risk-calibration.md)
+
+- [Синтетический train/validation/test для NER, линкера и алертов](experiments/2026-11-26-session-benchmark-2400.md)
+
+- [Пробная генерация v2: структурная проверка, слепое ревью и оставшиеся ограничения](experiments/2026-11-26-generation-v2-trial.md)
+
+- [Логичность и честность пилота: содержательный аудит и найденные смещения](experiments/2026-11-26-difficulty-pilot-quality-audit.md)
+
+- [Авторский пилот: три сложности и части train/validation/test](experiments/2026-11-26-difficulty-pilot-90.md)
+
+- [Примеры каждого семейства сценариев средней сложности](experiments/2026-11-26-medium-scenario-examples.md)
+
+- [Подбор весов риска и порогов на разбиении 90/90](experiments/2026-11-25-risk-tuning-90-90.md)
+
+- [Исправление эталона сочетаний по калькулятору разметки](experiments/2026-11-25-weight-label-calculator-review.md)
+
 - [300 сессий: только жёлтые и сочетания с оранжевыми, NER v2 и Gemma](experiments/2026-11-25-weight-combinations-300.md)
 
 - [Сложные диалоги: 200 сессий, NER v2 и Gemma](experiments/2026-11-25-complex-200.md)
@@ -130,6 +148,8 @@
 - [Архитектура](kb/architecture.md)
 
 ## Данные
+
+- [Переиспользуемая политика генерации синтетических сессий](data/synthetic-session-generation-policy.md)
 
 - [Синтетический корпус и разметка первого алерта (#33, #40)](data/session-alerts-pilot.md)
 

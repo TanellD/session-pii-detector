@@ -1,0 +1,58 @@
+# Точка продолжения validation и подбора риска
+
+- Дата: 2026-11-26.
+- Ветка: `feat/session-adapter-integration`.
+- Рабочий каталог относительно основного репозитория: `outputs/session-adapter-integration`.
+- Основное описание: [validation с кэшем](2026-11-26-cached-validation-risk-calibration.md).
+- Набор: `session-benchmark-2400-v5`; используется только validation.
+
+## Где сохранён прогресс
+
+Каталог запуска: `data/experiments/benchmark-validation-gemma-risk-2026-11-26`.
+Кэш NER, ответы Gemma и завершённые предсказания сохраняются после каждого результата.
+Данные и живые отчёты остаются вне git; этот коммит сохраняет документацию.
+
+Актуальное покрытие и ошибки следует читать из `online-progress.md` и
+`online-summary.json`. При продолжении worker его `status.json` может временно
+отставать от числа файлов предсказаний; наблюдатель считает завершённые файлы.
+Сохранённая ошибка считается незавершённой только пока нет успешного предсказания
+той же сессии. Ошибки не превращаются в отрицательные метки.
+
+Воспроизвести актуальное состояние без модельных вызовов:
+
+```powershell
+.venv-gliner/Scripts/python.exe -X utf8 tools/watch_cached_validation.py --run data/experiments/benchmark-validation-gemma-risk-2026-11-26 --once
+Get-Content data/experiments/benchmark-validation-gemma-risk-2026-11-26/online-progress.md -Encoding utf8
+```
+
+## Продолжение после остановки
+
+Сначала убедиться, что прежний worker не работает: не запускать два процесса
+обработки одного каталога. PID worker и наблюдателя сохранены в соседних файлах
+`benchmark-validation-gemma-risk-2026-11-26-worker.pid` и `...-watcher.pid`.
+Далее из рабочего каталога:
+
+```powershell
+.venv-gliner/Scripts/python.exe -X utf8 -u tools/run_cached_validation.py --input data/experiments/session-benchmark-2400-v5-2026-11-26/validation/snapshot.json --run data/experiments/benchmark-validation-gemma-risk-2026-11-26 --workers 3 --resume
+```
+
+В отдельном терминале, если наблюдатель тоже остановился:
+
+```powershell
+.venv-gliner/Scripts/python.exe -X utf8 tools/watch_cached_validation.py --run data/experiments/benchmark-validation-gemma-risk-2026-11-26 --interval 15
+```
+
+## Что остаётся
+
+Завершить проход, разобрать неразрешённые пересечения типов и ответы линкера,
+не сохранившие кандидатов. Ограниченные повторы отвергнутых ответов сохраняют
+исходные ответы в архиве. Изменять фильтры в середине зафиксированного замера нельзя.
+
+После прохода запускается локальный подбор весов и порогов риска по сохранённым
+фактам. При исключении ошибочных сессий результат предварительный, с явным
+покрытием; он не подтверждает качество на полном validation. Frozen test не
+используется для подбора, конфигурация сервиса автоматически не меняется.
+
+Эталонные спаны и владельцы авторские на уровне сюжетных заготовок; алерты
+вычислены калькулятором правил разметки без весов сервиса. Это не независимая
+ручная проверка каждого готового диалога.
