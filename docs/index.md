@@ -1,5 +1,25 @@
 # База знаний проекта
 
+- [Исправленный NER + Gemma: параллельные прогоны на двух корпусах](experiments/2026-11-25-revised-ner-gemma-two-corpora.md)
+
+- [Проверка зафиксированного адаптера на следующих сессиях](experiments/2026-11-25-adapter-next-250.md)
+
+- [Отдельная ревизия адаптера: исправления и сравнение экстракции](experiments/2026-11-25-adapter-revision.md)
+
+- [Реальные выходы GLiNER + regex, Gemma и итоговые метрики сервиса](experiments/2026-11-25-gemma-real-ner-250.md)
+
+- [Notebook и выгрузка для локального Qwen-линкера в Colab](api/colab-linker.md)
+
+- [Компактный MiniCPM как линкер: отдельный прогон и live-отчёт](experiments/2026-11-25-minicpm-linker-250.md)
+
+- [Живой пилот Gemma-линера: владельцы, контекст и задержка API](experiments/2026-11-24-gemma-linker-baseline.md)
+
+- [Gemma как baseline линкера: контракт, контекст и запуск](api/gemma-linker-baseline.md)
+
+- [Установка GLiNER и реальный прогон сессионного сервиса](experiments/2026-11-24-gliner-runtime-250.md)
+
+- [Случайный линкер: раздельная оценка компонентов и HTTP на срезе Gemma](experiments/2026-11-24-random-linker-250.md)
+
 Точка входа. Хранитель базы знаний обновляет эту страницу раз в 2 недели.
 
 ## Проект
@@ -26,6 +46,14 @@
 - [Закрытие пробелов: рабочие решения и запуск калькулятора](project/annotation-gap-resolution-2026-11-15.md)
 
 ## Исследование
+
+- [Повторный аудит новых ответов Gemma и Qwen](experiments/2026-11-24-annotation-update-audit.md)
+
+- [Аудит завершённых аннотаций Gemma: модель, инструкция и обработчик](experiments/2026-11-24-gemma-partial-annotation-audit.md)
+
+- [500 сессий по исходным сценариям Андрея и сравнение с первой тысячей](experiments/2026-11-23-andrey-500-comparison.md)
+
+- [Тысяча синтетических сессий: авторская разметка и проверка Gemma](experiments/2026-11-23-annotation-1000.md)
 
 - [Проверка интеграции адаптера с сервисом](experiments/2026-11-22-service-adapter-integration.md)
 

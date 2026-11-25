@@ -148,9 +148,16 @@ NER и regexp реализуют `detect(message) -> DetectionResult`. Вход 
 
 ## Режим извлечения и подключение модели
 
+Линкер выбирается отдельно через `PII_LINKER_MODE=stub|random|gemma`.
+Для Gemma нужен `RADEON_API_KEY`; контракт, ограниченный контекст внутри
+сессии и запуск описаны в [инструкции baseline](gemma-linker-baseline.md).
+
 `PII_DETECTOR_MODE=regex` — начальный режим без дополнительных модельных зависимостей. `AdapterDetector` вызывает `benchmarks.adapter.adapter.extract()` один раз на новое сообщение; вторая стадия `EmptyDetector` не запускает regex повторно. Контекстные части имени также доступны без модели. `stub` сохраняет прежний пустой каркас.
 
 Для `gliner` подготовьте модель по инструкции benchmarks/pii_smoke/README.md в отдельном окружении с GLiNER и зависимостями сервиса, затем задайте PII_MODEL_DIR. Пример локального запуска:
+
+Практическая установка на Windows с Python 3.11, исправление Unicode-пути tokenizer
+и результаты реального запуска описаны в [эксперименте GLiNER](../experiments/2026-11-24-gliner-runtime-250.md).
 
 ```powershell
 $env:PII_DETECTOR_MODE='gliner'
