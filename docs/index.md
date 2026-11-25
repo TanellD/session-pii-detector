@@ -1,5 +1,8 @@
 # База знаний проекта
 
+- [NER v2: границы контактов и контекст ФИО](experiments/2026-11-25-adapter-v2.md)
+- [Точка продолжения](experiments/2026-11-25-ner-gemma-checkpoint.md)
+
 - [Исправленный NER + Gemma: параллельные прогоны на двух корпусах](experiments/2026-11-25-revised-ner-gemma-two-corpora.md)
 
 - [Проверка зафиксированного адаптера на следующих сессиях](experiments/2026-11-25-adapter-next-250.md)
