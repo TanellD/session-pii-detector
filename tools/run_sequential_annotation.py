@@ -3,6 +3,7 @@ import argparse
 import copy
 from datetime import datetime, timezone
 import hashlib
+from http.client import HTTPException
 import json
 from pathlib import Path
 import subprocess
@@ -17,6 +18,32 @@ from run_compatible_annotation_pilot import (ROOT, endpoint, local_key, make_bod
 
 def write(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+
+def send_with_retries(url, key, body, timeout, retries, delay, attempts, retry_callback):
+    """Повторяется тот же запрос; ответы модели и ошибки валидации не исправляются."""
+    for number in range(retries+1):
+        attempt = {'attempt':number+1,'status':'requested'}
+        attempts.append(attempt)
+        started = time.perf_counter()
+        try:
+            response = send(url,key,body,timeout)
+            attempt.update(status='response',request_seconds=time.perf_counter()-started)
+            return response
+        except (HTTPError,URLError,TimeoutError,HTTPException,ConnectionError) as error:
+            retryable = not isinstance(error,HTTPError) or error.code in {429,500,502,503,504}
+            attempt.update(status='failed',error_type=type(error).__name__,request_seconds=time.perf_counter()-started)
+            if isinstance(error,URLError) and not isinstance(error,HTTPError):
+                # Классы/коды помогают отличить DNS, TLS и соединение без вывода ключей и URL.
+                reason=error.reason
+                attempt.update(reason_type=type(reason).__name__,errno=getattr(reason,'errno',None),
+                               winerror=getattr(reason,'winerror',None))
+            if isinstance(error,HTTPError):
+                attempt['http_status']=error.code
+            if not retryable or number==retries:
+                raise
+            time.sleep(min(delay*(number+1),60))
+            retry_callback()
 
 
 def step_payload(session, length, previous):
@@ -60,8 +87,10 @@ def main():
     parser.add_argument('--max-tokens', type=int, default=4000)
     parser.add_argument('--delay', type=float, default=3)
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--http-retries',type=int,default=0)
+    parser.add_argument('--retry-delay',type=float,default=30)
     args = parser.parse_args()
-    if args.timeout <= 0 or args.max_tokens <= 0 or args.delay < 0:
+    if args.timeout <= 0 or args.max_tokens <= 0 or args.delay < 0 or args.http_retries < 0 or args.retry_delay < 0:
         parser.error('Некорректные параметры запроса')
     sessions = source_sessions(args.input)
     source_manifest = json.loads((args.input.parent / 'manifest.json').read_text(encoding='utf-8'))
@@ -108,6 +137,7 @@ def main():
         'schema_sha256':hashlib.sha256(json.dumps(schema,sort_keys=True).encode()).hexdigest(),
         'policy_sha256':context['policy_sha256'],'endpoint':endpoint(profile['base_url']),
         'timeout':args.timeout,'max_tokens':args.max_tokens,'temperature':0,'delay':args.delay,
+        'http_retries':args.http_retries,'retry_delay':args.retry_delay,
         'api_requests':0,'records':[],'steps':[], 'human_review_status':'pending',
         'failure_policy':'stop_current_session; continue_next_session; stop_all_on_http_error',
         'gold_supplied_to_model':False,'future_supplied_to_model':False}
@@ -132,7 +162,11 @@ def main():
             save()
             request_started = time.perf_counter()
             try:
-                response = send(manifest['endpoint'],key,body,args.timeout)
+                def retry_callback():
+                    manifest['api_requests'] += 1
+                    save()
+                response = send_with_retries(manifest['endpoint'],key,body,args.timeout,
+                                            args.http_retries,args.retry_delay,step.setdefault('attempts',[]),retry_callback)
                 step['request_seconds'] = time.perf_counter() - request_started
                 write(output/f'{stem}-response.json',response)
                 step.update(returned_model=response.get('model'),usage=response.get('usage'))
@@ -145,7 +179,7 @@ def main():
                 record['completed_messages'] = length
             except HTTPError as error:
                 step.update(status='http_error',http_status=error.code)
-            except (URLError,TimeoutError,ValueError,KeyError,IndexError,TypeError) as error:
+            except (URLError,TimeoutError,HTTPException,ConnectionError,ValueError,KeyError,IndexError,TypeError) as error:
                 step.update(status='invalid_or_failed',error_type=type(error).__name__)
             step.setdefault('request_seconds',time.perf_counter() - request_started)
             save()

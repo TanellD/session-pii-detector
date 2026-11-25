@@ -86,6 +86,11 @@ def quote_schema():
     entity["properties"]["mention"] = {"type": "string"}
     entity["properties"]["occurrence"] = {"type": "integer", "minimum": 1}
     entity["required"] = list(entity["properties"])
+    # xgrammar у совместимого провайдера отклоняет uniqueItems при компиляции.
+    # Уникальность владельцев обязательно проверяется локальным validate().
+    for owner_variant in entity["properties"]["person_id"]["anyOf"]:
+        if owner_variant.get("type") == "array":
+            owner_variant.pop("uniqueItems", None)
     return schema
 
 
