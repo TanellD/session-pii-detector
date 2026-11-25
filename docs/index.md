@@ -1,5 +1,7 @@
 # База знаний проекта
 
+- [300 сессий: только жёлтые и сочетания с оранжевыми, NER v2 и Gemma](experiments/2026-11-25-weight-combinations-300.md)
+
 - [Сложные диалоги: 200 сессий, NER v2 и Gemma](experiments/2026-11-25-complex-200.md)
 
 - [NER v2: границы контактов и контекст ФИО](experiments/2026-11-25-adapter-v2.md)

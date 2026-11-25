@@ -64,6 +64,17 @@ def expected_alert(record,calculator):
     return assess(record['gold'],calculator)['first_alert']
 
 
+def bucket_alerts(records, selected_ids, cases):
+    buckets=sorted({records[sid]['bucket'] for sid in selected_ids})
+    result={}
+    for bucket in buckets:
+        ids={sid for sid in selected_ids if records[sid]['bucket']==bucket}
+        rows=[row for row in cases if row['session_id'] in ids]
+        result[bucket]=dict(selected_sessions=len(ids),completed_sessions=len(rows),
+            **alerts([r['gold_first_alert'] for r in rows],[r['predicted_first_alert'] for r in rows]))
+    return result
+
+
 def summarize(output,source):
     state=read(output/'manifest.json')
     by_id={r['session_id']:r['gold'] for r in source['records']}
@@ -82,6 +93,11 @@ def summarize(output,source):
     result['cases']=[dict(session_id=doc['session_id'],owner_groups_exact=groups(doc)==groups(pred),
         gold_first_alert=gold['message_index'] if gold else None,predicted_first_alert=pred['first_alert'])
         for doc,pred,gold in zip(docs,predictions,expected)]
+    if all('bucket' in records[sid] for sid in state['selected_ids']):
+        result['alerts_by_bucket']=bucket_alerts(records,state['selected_ids'],result['cases'])
+    if source.get('label_policy_status'):
+        result.update(label_policy_status=source['label_policy_status'],
+                      label_policy_version=source.get('label_policy_version'))
     timings=[read(p)['request_seconds'] for p in output.glob('*/attempt-*/call-*-timing.json')]
     result['api']=dict(completed_calls=len(timings),p50_seconds=statistics.median(timings) if timings else None,
         max_seconds=max(timings) if timings else None)

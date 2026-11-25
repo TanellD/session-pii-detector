@@ -71,6 +71,8 @@ def render(run):
     processed=sum(row['status'] in {'complete','failed'} for row in latest.values())
     status = 'Завершён' if done == total else ('Выполняется' if active else
         'Обход завершён; есть ошибки' if processed == total else 'Остановлен: требуется продолжение')
+    if not active and (run / 'stopped-by-user.json').exists():
+        status = 'Остановлен по просьбе пользователя; результаты сохранены'
     last = state['sessions'][-1] if state['sessions'] else {}
     percent = lambda value: 'N/A' if value is None else f'{value * 100:.2f}%'
     number = lambda value: 'N/A' if value is None else f'{value:.2f}'
@@ -99,7 +101,7 @@ def render(run):
         ('Метрики алертов рассчитаны только по завершённым сессиям. Реальный GLiNER + regex → фильтры сервиса → Gemma → риск. '
          'Pairwise — только на спанах с точным совпадением типа и границ; пропуски и лишние спаны учитываются в извлечении. ' if report.get('detector_mode') else
          'Метрики рассчитаны только по завершённым сессиям. Эталонные спаны → LLM → расчёт риска; ошибки NER не измеряются. ')+
-        'Синтетический срез частично использовался при отладке. Значения не доказывают качество на реальных диалогах.', '',
+        source.get('evaluation_note_ru', 'Синтетический срез частично использовался при отладке. Значения не доказывают качество на реальных диалогах.'), '',
         f'Pairwise: `{json.dumps(pair["counts"], ensure_ascii=False)}`; '
         f'известных упоминаний: {pair["eligible_mentions"]}; неизвестных исключено: {pair["excluded_gold_unknown_mentions"]}.', '',
         f'Алерты session: TP={session.get("tp", 0)}, FP={session.get("fp", 0)}, FN={session.get("fn", 0)}, TN={session.get("tn", 0)}.', '',
@@ -113,6 +115,15 @@ def render(run):
             f'| После фильтров, завершённые сессии | {percent(filtered["precision"])} | {percent(filtered["recall"])} | {percent(filtered["f2"])} |',
             '', 'Знаменатели различаются: второй срез исключает ошибки выполнения. Полные счётчики и разрезы по типам — в summary.json.', ''])
         lines.extend([f'Для оценки линкера сопоставлено {pair["matched_mentions"]}/{pair["gold_mentions_in_completed_sessions"]} эталонных упоминаний завершённых сессий.', ''])
+    if report.get('alerts_by_bucket'):
+        lines.extend(['## Сочетания атрибутов', '',
+            '| Группа | Завершено / выбрано | Precision-session | Recall-session | F2-session | F2-timely |',
+            '|---|---:|---:|---:|---:|---:|'])
+        for bucket, row in report['alerts_by_bucket'].items():
+            s, t = row['session'], row['timely']
+            lines.append(f'| {bucket} | {row["completed_sessions"]}/{row["selected_sessions"]} | '
+                f'{percent(s["precision"])} | {percent(s["recall"])} | {percent(s["f2"])} | {percent(t["f2"])} |')
+        lines.extend(['', 'Сравнение с предварительной авторской политикой; отказы не входят в метрики успешных сессий.', ''])
     lines.extend(['## Расхождения', '', '| Сессия | Группы владельцев совпали | Эталонный первый алерт | Предсказанный |', '|---|---|---:|---:|'])
     mismatches = [row for row in report['cases'] if not row['owner_groups_exact'] or row['gold_first_alert'] != row['predicted_first_alert']]
     for row in mismatches:
