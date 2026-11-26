@@ -1,5 +1,9 @@
 # База знаний проекта
 
+- [Подбор только порогов для максимизации F2-timely](experiments/2026-11-26-validation-thresholds-only.md)
+
+- [Выгрузка только regex + GLiNER для бенчмарка](experiments/2026-11-26-benchmark-ner-export.md)
+
 - [Точка продолжения validation и подбора риска](experiments/2026-11-26-validation-checkpoint.md)
 
 - [Validation с кэшем моделей и автоматическим подбором весов и порогов риска](experiments/2026-11-26-cached-validation-risk-calibration.md)

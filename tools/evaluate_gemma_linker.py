@@ -75,7 +75,7 @@ def bucket_alerts(records, selected_ids, cases):
     return result
 
 
-def summarize(output,source):
+def summarize(output,source, *, filename='summary.json'):
     state=read(output/'manifest.json')
     by_id={r['session_id']:r['gold'] for r in source['records']}
     completed=[r for r in state['sessions'] if r['status']=='complete']
@@ -114,7 +114,8 @@ def summarize(output,source):
         result['pipeline_latency']=dict(messages=len(values),median_seconds=statistics.median(values) if values else None,
             max_seconds=max(values) if values else None,
             scope='current in-process pipeline including live Gemma API on completed sessions; frozen NER replay, not fresh NER or HTTP latency')
-    write(output/'summary.json',result)
+    result['label_review'] = source.get('label_review')
+    write(output/filename,result)
     return result
 
 

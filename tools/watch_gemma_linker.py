@@ -9,6 +9,7 @@ import re
 import time
 
 from evaluate_gemma_linker import ROOT, summarize
+from relabel_weight_300 import scoring_source
 
 
 def alive(pid):
@@ -62,7 +63,8 @@ def render(run):
     if not input_path.exists():
         input_path=ROOT / 'data/experiments/random-linker-250-2026-11-24/snapshot.json'
     source = json.loads(input_path.read_text(encoding='utf-8'))
-    report = summarize(output, source)
+    source, summary_filename = scoring_source(run, source)
+    report = summarize(output, source, filename=summary_filename)
     state = json.loads((output / 'manifest.json').read_text(encoding='utf-8'))
     pid = int((run / 'worker.pid').read_text().strip())
     active = alive(pid)
@@ -107,13 +109,26 @@ def render(run):
         f'Алерты session: TP={session.get("tp", 0)}, FP={session.get("fp", 0)}, FN={session.get("fn", 0)}, TN={session.get("tn", 0)}.', '',
         f'Алерты timely: TP={timely.get("tp", 0)}, FP={timely.get("fp", 0)}, FN={timely.get("fn", 0)}.', '',
     ]
+    if report.get('label_review'):
+        review = report['label_review']
+        lines.extend(['## Исправленный эталон', '',
+            f'Версия: `{source["label_policy_version"]}`; политика калькулятора: `{review["policy_version"]}`.', '',
+            f'В полном корпусе: положительных {review["positive"]}, отрицательных {review["negative"]}; '
+            f'изменён первый алерт у {review["changed_first_alert"]} сессий. '
+            f'С неуверенными префиксами: {review["sessions_with_uncertain_prefix"]}.', '',
+            f'Недостаточно статистики в конце сессии: {review["sessions_uncertain_at_end"]}. '
+            'Такие отрицательные метки означают отсутствие достаточного основания по рабочей политике, '
+            'а не подтверждённую безопасность.', '',
+            'Сохранённые предсказания пересчитываются автоматически; повторных вызовов API для смены эталона нет. '
+            'Прежний авторский эталон сохранён в исходном input-snapshot.json и summary.json. '
+            'Пометки недостаточной статистики и оценки по персонам — в calculator_prefix_ledger исправленного снимка.', ''])
     if report.get('detector_mode'):
         raw=report['raw_extraction_all_sessions']['micro']
         filtered=report['filtered_extraction_completed_sessions']['micro']
         lines.extend(['', '## Извлечение', '', '| Этап | Precision | Recall | F2 |', '|---|---:|---:|---:|',
             f'| GLiNER + regex, весь выбранный срез | {percent(raw["precision"])} | {percent(raw["recall"])} | {percent(raw["f2"])} |',
             f'| После фильтров, завершённые сессии | {percent(filtered["precision"])} | {percent(filtered["recall"])} | {percent(filtered["f2"])} |',
-            '', 'Знаменатели различаются: второй срез исключает ошибки выполнения. Полные счётчики и разрезы по типам — в summary.json.', ''])
+            '', f'Знаменатели различаются: второй срез исключает ошибки выполнения. Полные счётчики и разрезы по типам — в {summary_filename}.', ''])
         lines.extend([f'Для оценки линкера сопоставлено {pair["matched_mentions"]}/{pair["gold_mentions_in_completed_sessions"]} эталонных упоминаний завершённых сессий.', ''])
     if report.get('alerts_by_bucket'):
         lines.extend(['## Сочетания атрибутов', '',
@@ -123,7 +138,7 @@ def render(run):
             s, t = row['session'], row['timely']
             lines.append(f'| {bucket} | {row["completed_sessions"]}/{row["selected_sessions"]} | '
                 f'{percent(s["precision"])} | {percent(s["recall"])} | {percent(s["f2"])} | {percent(t["f2"])} |')
-        lines.extend(['', 'Сравнение с предварительной авторской политикой; отказы не входят в метрики успешных сессий.', ''])
+        lines.extend(['', f'Эталон: `{source.get("label_policy_version", "original")}`; отказы не входят в метрики успешных сессий.', ''])
     lines.extend(['## Расхождения', '', '| Сессия | Группы владельцев совпали | Эталонный первый алерт | Предсказанный |', '|---|---|---:|---:|'])
     mismatches = [row for row in report['cases'] if not row['owner_groups_exact'] or row['gold_first_alert'] != row['predicted_first_alert']]
     for row in mismatches:
@@ -136,7 +151,7 @@ def render(run):
     if not failed:
         lines.append('Нет.')
     lines.extend(['', '## Файлы и воспроизведение', '',
-        '[Метрики и случаи](results/summary.json), [состояние](results/manifest.json), [журналы](logs/).', '',
+        f'[Метрики и случаи](results/{summary_filename}), [состояние](results/manifest.json), [журналы](logs/).', '',
         'Команда обновления из корня worktree (без API):', '', '```powershell',
         f'.\\.venv-gliner\\Scripts\\python.exe -X utf8 tools/watch_gemma_linker.py --run {run.relative_to(ROOT).as_posix()} --once', '```', '',
         'Для постоянного обновления запустите ту же команду без `--once`. Наблюдатель не перезапускает оценщик и не делает запросы к модели.', ''])
