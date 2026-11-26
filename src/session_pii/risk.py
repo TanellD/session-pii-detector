@@ -1,5 +1,6 @@
 """Риск после линковки: веса типов, а не confidence детектора или число людей."""
 import json
+import os
 from decimal import Decimal
 from pathlib import Path
 from typing import get_args
@@ -37,7 +38,7 @@ class RiskPolicy(Model):
 
     @classmethod
     def load(cls):
-        path = Path(__file__).resolve().parents[2] / 'configs/runtime-risk-policy.json'
+        path = Path(os.environ.get('PII_RISK_POLICY') or Path(__file__).resolve().parents[2] / 'configs/runtime-risk-policy.json')
         return cls.model_validate(json.loads(path.read_text(encoding='utf-8')))
 
 

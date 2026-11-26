@@ -4,6 +4,7 @@ data/*
 
 # Артефакты прогонов
 runs/
+/drafts/
 outputs/
 mlruns/
 wandb/

@@ -12,6 +12,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from tools.ownership import owner_ids
 from .components import LinkResult, StubLinker
+from .observability import timed
 
 ROOT=Path(__file__).resolve().parents[2]
 PROMPT='''Ты назначаешь владельцев уже извлечённым атрибутам в русскоязычном диалоге.
@@ -50,6 +51,7 @@ class GemmaSettings:
     max_context_facts: int=128
     context_messages: int=3
     reasoning_effort: str | None=None
+    max_concurrency: int=1
 
     def __post_init__(self):
         url=urlsplit(self.base_url)
@@ -57,8 +59,10 @@ class GemmaSettings:
         if not url.hostname or url.username or url.password or url.query or url.fragment or url.scheme not in (
                 {'http','https'} if local else {'https'}):
             raise ValueError('Invalid linker endpoint')
-        if not self.api_key.strip() or any(x<=0 for x in (self.timeout_seconds,self.max_tokens,self.max_candidates,self.max_context_facts)):
+        if not self.api_key.strip() or any(x<=0 for x in (self.timeout_seconds,self.max_tokens,self.max_candidates,self.max_context_facts,self.max_concurrency)):
             raise ValueError('Invalid linker configuration')
+        if type(self.max_concurrency) is not int:
+            raise ValueError('Linker concurrency must be an integer')
         if type(self.context_messages) is not int or self.context_messages<0:
             raise ValueError('Invalid linker context window')
         if self.reasoning_effort not in {None,'none','minimal','low','medium','high'}:
@@ -70,6 +74,10 @@ class GemmaSettings:
         config=json.loads(config_path.read_text(encoding='utf-8'))
         key=os.environ.get(config.pop('api_key_env'),'')
         config.pop('version')
+        if os.environ.get('PII_LINKER_TIMEOUT_SECONDS'):
+            config['timeout_seconds'] = float(os.environ['PII_LINKER_TIMEOUT_SECONDS'])
+        if os.environ.get('PII_LINKER_CONCURRENCY'):
+            config['max_concurrency'] = int(os.environ['PII_LINKER_CONCURRENCY'])
         return cls(api_key=key,**config)
 
 
@@ -82,16 +90,21 @@ class ChatCompletion:
     """Один запрос без скрытых повторов; ключ не попадает в observer."""
     def __init__(self,settings,observer=None):
         self.settings,self.observer=settings,observer
-        self.semaphore=BoundedSemaphore(1)
+        self.semaphore=BoundedSemaphore(settings.max_concurrency)
 
     def __call__(self,body):
         request=Request(self.settings.base_url.rstrip('/')+'/chat/completions',
             data=json.dumps(body,ensure_ascii=False).encode(),
             headers={'Content-Type':'application/json','Authorization':'Bearer '+self.settings.api_key},method='POST')
-        with self.semaphore:
+        with timed('linker_wait'):
+            acquired = self.semaphore.acquire(timeout=self.settings.timeout_seconds)
+        if not acquired:
+            raise TimeoutError('Linker capacity timeout')
+        try:
             start=time.perf_counter()
-            with build_opener(NoRedirect()).open(request,timeout=self.settings.timeout_seconds) as response:
-                raw=response.read(2*1024*1024+1)
+            with timed('linker_external'):
+                with build_opener(NoRedirect()).open(request,timeout=self.settings.timeout_seconds) as response:
+                    raw=response.read(2*1024*1024+1)
             if len(raw)>2*1024*1024:
                 raise ValueError('Linker response too large')
             result=json.loads(raw)
@@ -99,6 +112,8 @@ class ChatCompletion:
             if self.observer:
                 self.observer(body,result,elapsed)
             return result
+        finally:
+            self.semaphore.release()
 
 
 class GemmaLinker:

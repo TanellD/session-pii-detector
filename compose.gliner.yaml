@@ -1,0 +1,20 @@
+services:
+  pii-service:
+    image: session-pii:service-v2-gliner
+    build:
+      target: gliner
+    environment:
+      PII_DETECTOR_MODE: gliner
+      PII_MODEL_DIR: /models/gliner
+    volumes:
+      - type: volume
+        source: gliner-model
+        target: /models/gliner
+        read_only: true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz',timeout=2)"]
+      start_period: 180s
+volumes:
+  gliner-model:
+    external: true
+    name: "${PII_MODEL_VOLUME:-pii-docker-service-v2-gliner-model}"

@@ -9,6 +9,7 @@ from .components import Detector, Fact, Linker
 from .models import Candidate, Entity, Message, Span, Verdict, MentionKey, SuppressedSpan
 from .normalization import resolve
 from .risk import RiskEvaluator
+from .observability import timed
 
 
 @dataclass(frozen=True)
@@ -32,7 +33,8 @@ class Pipeline:
         candidates = {}
         incomplete = list(previous.incomplete_reasons)
         for name, detector in (('ner', self.ner), ('regexp', self.regexp)):
-            output = detector.detect(message)
+            with timed(name):
+                output = detector.detect(message)
             if not output.complete:
                 incomplete.extend(output.reasons or (f'{name}_incomplete',))
             for span in output.spans:
@@ -48,11 +50,13 @@ class Pipeline:
                         'provenance': tuple(dict.fromkeys(old.provenance+span.provenance))})
                 else:
                     candidates[key] = Candidate(**span.model_dump(), sources=sources)
-        ordered, suppressed = resolve(tuple(candidates[k] for k in sorted(candidates)))
-        self._validate(message, ordered, tuple(None for _ in ordered))
+        with timed('normalization'):
+            ordered, suppressed = resolve(tuple(candidates[k] for k in sorted(candidates)))
+            self._validate(message, ordered, tuple(None for _ in ordered))
         contextual=getattr(self.linker,'link_with_context',None)
-        linked=(contextual(message,ordered,facts,previous_messages) if callable(contextual)
-                else self.linker.link(message, ordered, facts))
+        with timed('linker'):
+            linked=(contextual(message,ordered,facts,previous_messages) if callable(contextual)
+                    else self.linker.link(message, ordered, facts))
         if len(linked.person_ids) != len(ordered):
             raise ValueError('Linker must preserve entity count and order')
         if not linked.complete:
@@ -79,8 +83,9 @@ class Pipeline:
                 continue
             for person in owner_ids(fact.person_id):
                 people[person].append(fact)
-        assessments = {p:self.evaluator.assess(tuple(rows)) for p,rows in people.items()}
-        unknown_risk = self.evaluator.assess(tuple(unknown), unknown=True)
+        with timed('risk'):
+            assessments = {p:self.evaluator.assess(tuple(rows)) for p,rows in people.items()}
+            unknown_risk = self.evaluator.assess(tuple(unknown), unknown=True)
         all_assessments = (*assessments.values(), unknown_risk)
         reason = next((rule for rule in ('red_rule', 'combination_rule', 'score_rule')
                        if any(rule in a.rules for a in all_assessments)), None)
