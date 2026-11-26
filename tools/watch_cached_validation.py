@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import statistics
 import time
 
 
@@ -71,6 +72,11 @@ def snapshot(run):
                   ner_extraction=read(run/'ner/extraction.json'),
                   calibration=read(run/'calibration/report.json'))
     if predictions:
+        calls = [call for prediction in predictions.values() for call in prediction.get('calls', [])]
+        fresh = sorted(c['seconds'] for c in calls if not c['cache_hit'])
+        result['linker_timing'] = dict(calls=len(calls), fresh_calls=len(fresh),
+            median_seconds=statistics.median(fresh) if fresh else None,
+            p95_seconds=fresh[min(len(fresh)-1, int(.95*len(fresh)))] if fresh else None)
         from calibrate_cached_risk import measured
         from evaluate_gemma_linker import matched_linker_metrics
         from evaluate_random_linker import extraction
@@ -98,7 +104,8 @@ def render(data, run, interval):
              f"Процесс: {'работает' if data['worker_alive'] else 'не обнаружен — прогон мог остановиться или завершиться'}; PID: {data['worker_pid']}. Этап: {status.get('stage', 'неизвестен')}.",
              f"Последнее событие worker (UTC): {status.get('updated_at', '—')}.", '',
              f"Полностью завершено: **{data['completed']}/{data['total']}**; незавершённых с сохранённой ошибкой: {data['unresolved_failures']}; остальных: {data['pending']}.",
-             f"NER: {data['cache']['ner']}/{status.get('ner_total', '?')} уникальных текстов; кэш ответов линкера: {data['cache']['llm']}.",
+             (f"Режим сохранённых кандидатов: {status['dataset_mode']}." if status.get('dataset_mode') else
+              f"NER: {data['cache']['ner']}/{status.get('ner_total', '?')} уникальных текстов; кэш ответов линкера: {data['cache']['llm']}."),
              f"Отвергнутых ответов в архиве: {data['cache']['rejected_llm']}; записей транспортных ошибок: {data['cache']['transport_errors']}.", '',
              'Числа ниже предварительные: только полностью завершённые сессии; ошибки не считаются TN. Состав подмножества меняется, сравнивать последовательные обновления как улучшение модели нельзя.', '',
              '| Метрика | Precision | Recall | F2 |', '|---|---:|---:|---:|']
@@ -108,7 +115,9 @@ def render(data, run, interval):
                          ('Экстракция после обработки сервисом', metrics.get('extraction', {}).get('micro', {}))]:
         lines.append('| '+name+' | '+' | '.join(number(values.get(k)) for k in ('precision', 'recall', 'f2'))+' |')
     linker = metrics.get('linker', {})
+    timing = data.get('linker_timing', {})
     lines += ['', f"Линкер на точно совпавших спанах: precision={number(linker.get('precision'))}, recall={number(linker.get('recall'))}, F1={number(linker.get('f1'))}; совпало {linker.get('matched_mentions', 0)}/{linker.get('gold_mentions_in_completed_sessions', 0)} эталонных упоминаний.",
+              f"Вызовы линкера успешных сессий: {timing.get('calls', 0)}; новых: {timing.get('fresh_calls', 0)}; медиана: {number(timing.get('median_seconds'))} с, p95: {number(timing.get('p95_seconds'))} с. Загрузка исключена; это не замер предельного RPS.",
               f"FP0 по уверенно отрицательным: {number(metrics.get('alerts', {}).get('fp0'))}; знаменатель: {metrics.get('alerts', {}).get('fp0_denominator', 0)}.",
               'Метрики линкера условны на совпавших спанах и не включают ошибки экстракции.']
     lines += ['', 'Метрики линкера, FP0 и исходы ошибок доступны в [online-summary.json](online-summary.json).',

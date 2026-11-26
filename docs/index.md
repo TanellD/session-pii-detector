@@ -1,5 +1,8 @@
 # База знаний проекта
 
+- [Датасет и проверка дешёвых линкеров](data/cheap-linker-benchmark.md)
+- [Проверка пакета сравнения линкеров](experiments/2026-11-26-cheap-linker-package.md)
+
 - [Подбор только порогов для максимизации F2-timely](experiments/2026-11-26-validation-thresholds-only.md)
 
 - [Выгрузка только regex + GLiNER для бенчмарка](experiments/2026-11-26-benchmark-ner-export.md)
