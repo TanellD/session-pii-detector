@@ -8,6 +8,7 @@ from threading import Lock
 from benchmarks.adapter.adapter import extract
 from .components import DetectionResult, EmptyDetector, StubNER, StubRegexp
 from .models import MentionOrigin, Span
+from .observability import emit
 
 ROOT = Path(__file__).resolve().parents[2]
 TYPE_MAP = {
@@ -25,18 +26,22 @@ class DetectorSettings:
     mode: str = 'regex'
     model_dir: Path | None = None
     config_path: Path = ROOT / 'benchmarks/pii_smoke/config.json'
+    adapter_revision: str = 'base'
 
     def __post_init__(self):
         if self.mode not in {'regex', 'gliner', 'stub'}:
             raise ValueError('PII_DETECTOR_MODE must be regex, gliner or stub')
         if self.mode == 'gliner' and self.model_dir is None:
             raise ValueError('PII_MODEL_DIR is required for local GLiNER')
+        if self.adapter_revision not in {'base', 'v2'}:
+            raise ValueError('PII_ADAPTER_REVISION must be base or v2')
 
     @classmethod
     def from_env(cls):
         path = os.environ.get('PII_MODEL_DIR')
         return cls(mode=os.environ.get('PII_DETECTOR_MODE', 'regex'),
-                   model_dir=Path(path) if path else None)
+                   model_dir=Path(path) if path else None,
+                   adapter_revision=os.environ.get('PII_ADAPTER_REVISION', 'v2'))
 
 
 class AdapterDetector:
@@ -49,18 +54,28 @@ class AdapterDetector:
         self.model = None
         self.lock = Lock()
 
+    def initialize(self):
+        if self.settings.mode == 'gliner':
+            emit('model_warmup_start')
+            import torch
+            torch.set_num_threads(int(os.environ.get('PII_TORCH_THREADS', str(self.config.get('threads', 2)))))
+            self._predict('Проверка готовности модели.')
+            emit('model_warmup_complete')
+
     def _predict(self, text):
         # Один экземпляр модели и сериализация её вызовов; состояния сессий здесь нет.
         with self.lock:
             if self.predictor is not None:
                 return self.predictor(text)
             if self.model is None:
+                emit('model_load_start')
                 from benchmarks.pii_smoke.prepare import read_manifest
                 read_manifest(self.settings.model_dir, self.config)
                 from gliner import GLiNER
                 self.model = GLiNER.from_pretrained(
                     str(self.settings.model_dir.resolve()), local_files_only=True,
                     load_tokenizer=True, token=False, strict=True).to('cpu').eval()
+                emit('model_load_complete')
             return self.model.predict_entities(text, list(self.config['labels']),
                         threshold=self.config['threshold'], flat_ner=True)
 
@@ -92,4 +107,10 @@ def build_detectors(settings):
     if settings.mode == 'stub':
         return StubNER(), StubRegexp()
     # extract() уже объединяет модель и regex: второй regex не вызывается.
-    return AdapterDetector(settings), EmptyDetector()
+    base = AdapterDetector(settings)
+    if settings.adapter_revision == 'v2':
+        from .adapter_revision_v2 import RevisedAdapter
+        detector = RevisedAdapter(base)
+        detector.initialize = base.initialize
+        return detector, EmptyDetector()
+    return base, EmptyDetector()
