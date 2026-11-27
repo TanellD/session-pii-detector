@@ -4,6 +4,7 @@ data/*
 
 # Артефакты прогонов
 runs/
+/drafts/
 outputs/
 mlruns/
 wandb/
@@ -16,7 +17,9 @@ wandb/
 .env
 .env.*
 !.env.example
-.venv/
+.venv*/
+.cache-research/
+.ruff_cache/
 __pycache__/
 *.pyc
 .ipynb_checkpoints/

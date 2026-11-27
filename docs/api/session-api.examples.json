@@ -1,0 +1,775 @@
+{
+  "status": "Иллюстративные ответы черновой политики, не результат запуска сервиса",
+  "pairs": [
+    {
+      "name": "single_unicode",
+      "request": {
+        "session_id": "s-single",
+        "message": {
+          "message_id": 1,
+          "role": "user",
+          "text": "🙂 Мой телефон +7 000 000-00-01."
+        },
+        "session_epoch": "epoch-single",
+        "expected_state_version": 0
+      },
+      "response": {
+        "session_id": "s-single",
+        "session_epoch": "epoch-single",
+        "state_version": 1,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 1,
+            "analysis_status": "analyzed",
+            "entities": [
+              {
+                "type": "PHONE",
+                "start": 14,
+                "end": 30,
+                "score": null,
+                "score_kind": "deterministic",
+                "detector": "regex-draft-v1",
+                "person_id": "p1"
+              }
+            ],
+            "message_verdict": {
+              "has_signals": true,
+              "decision": "no_alert"
+            },
+            "session_verdict": {
+              "decision": "no_alert",
+              "first_violation_message_id": null,
+              "coverage_complete": true,
+              "reason": null,
+              "persons": [
+                {
+                  "person_id": "p1",
+                  "decision": "no_alert",
+                  "rule": null,
+                  "risk_score": null,
+                  "markers": [
+                    {
+                      "message_id": 1,
+                      "type": "PHONE",
+                      "start": 14,
+                      "end": 30
+                    }
+                  ],
+                  "special_category": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "batch_two_orange",
+      "request": {
+        "session_id": "s-batch",
+        "messages": [
+          {
+            "message_id": 1,
+            "role": "user",
+            "text": "Мой телефон +7 000 000-00-01."
+          },
+          {
+            "message_id": 2,
+            "role": "user",
+            "text": "Моя почта lada@example.com."
+          }
+        ],
+        "session_epoch": "epoch-batch",
+        "expected_state_version": 0
+      },
+      "response": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "state_version": 2,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 1,
+            "analysis_status": "analyzed",
+            "entities": [
+              {
+                "type": "PHONE",
+                "start": 12,
+                "end": 28,
+                "score": null,
+                "score_kind": "deterministic",
+                "detector": "regex-draft-v1",
+                "person_id": "p1"
+              }
+            ],
+            "message_verdict": {
+              "has_signals": true,
+              "decision": "no_alert"
+            },
+            "session_verdict": {
+              "decision": "no_alert",
+              "first_violation_message_id": null,
+              "coverage_complete": true,
+              "reason": null,
+              "persons": [
+                {
+                  "person_id": "p1",
+                  "decision": "no_alert",
+                  "rule": null,
+                  "risk_score": null,
+                  "markers": [
+                    {
+                      "message_id": 1,
+                      "type": "PHONE",
+                      "start": 12,
+                      "end": 28
+                    }
+                  ],
+                  "special_category": false
+                }
+              ]
+            }
+          },
+          {
+            "message_id": 2,
+            "analysis_status": "analyzed",
+            "entities": [
+              {
+                "type": "EMAIL",
+                "start": 10,
+                "end": 26,
+                "score": null,
+                "score_kind": "deterministic",
+                "detector": "regex-draft-v1",
+                "person_id": "p1"
+              }
+            ],
+            "message_verdict": {
+              "has_signals": true,
+              "decision": "no_alert"
+            },
+            "session_verdict": {
+              "decision": "alert",
+              "first_violation_message_id": 2,
+              "coverage_complete": true,
+              "reason": null,
+              "persons": [
+                {
+                  "person_id": "p1",
+                  "decision": "alert",
+                  "rule": "two_orange",
+                  "risk_score": null,
+                  "markers": [
+                    {
+                      "message_id": 1,
+                      "type": "PHONE",
+                      "start": 12,
+                      "end": 28
+                    },
+                    {
+                      "message_id": 2,
+                      "type": "EMAIL",
+                      "start": 10,
+                      "end": 26
+                    }
+                  ],
+                  "special_category": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "tool_not_in_scope",
+      "request": {
+        "session_id": "s-tool",
+        "message": {
+          "message_id": 1,
+          "role": "tool",
+          "text": "Тестовый вывод инструмента."
+        },
+        "session_epoch": "epoch-tool",
+        "expected_state_version": 0
+      },
+      "response": {
+        "session_id": "s-tool",
+        "session_epoch": "epoch-tool",
+        "state_version": 1,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 1,
+            "analysis_status": "not_in_scope",
+            "entities": [],
+            "message_verdict": {
+              "has_signals": false,
+              "decision": "unknown"
+            },
+            "session_verdict": {
+              "decision": "unknown",
+              "first_violation_message_id": null,
+              "coverage_complete": false,
+              "reason": "role_tool_not_supported",
+              "persons": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "continuation_expected_version",
+      "request": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "expected_state_version": 1,
+        "message": {
+          "message_id": 2,
+          "role": "user",
+          "text": "Моя почта lada@example.com."
+        }
+      },
+      "response": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "state_version": 2,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 2,
+            "analysis_status": "analyzed",
+            "entities": [
+              {
+                "type": "EMAIL",
+                "start": 10,
+                "end": 26,
+                "score": null,
+                "score_kind": "deterministic",
+                "detector": "regex-draft-v1",
+                "person_id": "p1"
+              }
+            ],
+            "message_verdict": {
+              "has_signals": true,
+              "decision": "no_alert"
+            },
+            "session_verdict": {
+              "decision": "alert",
+              "first_violation_message_id": 2,
+              "coverage_complete": true,
+              "reason": null,
+              "persons": [
+                {
+                  "person_id": "p1",
+                  "decision": "alert",
+                  "rule": "two_orange",
+                  "risk_score": null,
+                  "markers": [
+                    {
+                      "message_id": 1,
+                      "type": "PHONE",
+                      "start": 12,
+                      "end": 28
+                    },
+                    {
+                      "message_id": 2,
+                      "type": "EMAIL",
+                      "start": 10,
+                      "end": 26
+                    }
+                  ],
+                  "special_category": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "prior_messages": [
+        {
+          "message": {
+            "message_id": 1,
+            "role": "user",
+            "text": "Мой телефон +7 000 000-00-01."
+          },
+          "entities": [
+            {
+              "type": "PHONE",
+              "start": 12,
+              "end": 28,
+              "score": null,
+              "score_kind": "deterministic",
+              "detector": "regex-draft-v1",
+              "person_id": "p1"
+            }
+          ]
+        }
+      ],
+      "prior_verdict": {
+        "decision": "no_alert",
+        "first_violation_message_id": null,
+        "coverage_complete": true,
+        "reason": null,
+        "persons": [
+          {
+            "person_id": "p1",
+            "decision": "no_alert",
+            "rule": null,
+            "risk_score": null,
+            "markers": [
+              {
+                "message_id": 1,
+                "type": "PHONE",
+                "start": 12,
+                "end": 28
+              }
+            ],
+            "special_category": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "exact_last_retry",
+      "request": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "expected_state_version": 1,
+        "message": {
+          "message_id": 2,
+          "role": "user",
+          "text": "Моя почта lada@example.com."
+        }
+      },
+      "response": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "state_version": 2,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 2,
+            "analysis_status": "analyzed",
+            "entities": [
+              {
+                "type": "EMAIL",
+                "start": 10,
+                "end": 26,
+                "score": null,
+                "score_kind": "deterministic",
+                "detector": "regex-draft-v1",
+                "person_id": "p1"
+              }
+            ],
+            "message_verdict": {
+              "has_signals": true,
+              "decision": "no_alert"
+            },
+            "session_verdict": {
+              "decision": "alert",
+              "first_violation_message_id": 2,
+              "coverage_complete": true,
+              "reason": null,
+              "persons": [
+                {
+                  "person_id": "p1",
+                  "decision": "alert",
+                  "rule": "two_orange",
+                  "risk_score": null,
+                  "markers": [
+                    {
+                      "message_id": 1,
+                      "type": "PHONE",
+                      "start": 12,
+                      "end": 28
+                    },
+                    {
+                      "message_id": 2,
+                      "type": "EMAIL",
+                      "start": 10,
+                      "end": 26
+                    }
+                  ],
+                  "special_category": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "prior_messages": [
+        {
+          "message": {
+            "message_id": 1,
+            "role": "user",
+            "text": "Мой телефон +7 000 000-00-01."
+          },
+          "entities": [
+            {
+              "type": "PHONE",
+              "start": 12,
+              "end": 28,
+              "score": null,
+              "score_kind": "deterministic",
+              "detector": "regex-draft-v1",
+              "person_id": "p1"
+            }
+          ]
+        }
+      ],
+      "prior_verdict": {
+        "decision": "no_alert",
+        "first_violation_message_id": null,
+        "coverage_complete": true,
+        "reason": null,
+        "persons": [
+          {
+            "person_id": "p1",
+            "decision": "no_alert",
+            "rule": null,
+            "risk_score": null,
+            "markers": [
+              {
+                "message_id": 1,
+                "type": "PHONE",
+                "start": 12,
+                "end": 28
+              }
+            ],
+            "special_category": false
+          }
+        ]
+      },
+      "retry_of": "continuation_expected_version"
+    },
+    {
+      "name": "correction_keeps_historical_alert",
+      "request": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "expected_state_version": 2,
+        "message": {
+          "message_id": 3,
+          "role": "user",
+          "text": "Почта выше была указана ошибочно."
+        }
+      },
+      "response": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "state_version": 3,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 3,
+            "analysis_status": "analyzed",
+            "entities": [],
+            "message_verdict": {
+              "has_signals": false,
+              "decision": "no_alert"
+            },
+            "session_verdict": {
+              "decision": "alert",
+              "first_violation_message_id": 2,
+              "coverage_complete": true,
+              "reason": null,
+              "persons": [
+                {
+                  "person_id": "p1",
+                  "decision": "no_alert",
+                  "rule": null,
+                  "risk_score": null,
+                  "markers": [
+                    {
+                      "message_id": 1,
+                      "type": "PHONE",
+                      "start": 12,
+                      "end": 28
+                    }
+                  ],
+                  "special_category": false
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "prior_messages": [
+        {
+          "message": {
+            "message_id": 1,
+            "role": "user",
+            "text": "Мой телефон +7 000 000-00-01."
+          },
+          "entities": [
+            {
+              "type": "PHONE",
+              "start": 12,
+              "end": 28,
+              "score": null,
+              "score_kind": "deterministic",
+              "detector": "regex-draft-v1",
+              "person_id": "p1"
+            }
+          ]
+        },
+        {
+          "message": {
+            "message_id": 2,
+            "role": "user",
+            "text": "Моя почта lada@example.com."
+          },
+          "entities": [
+            {
+              "type": "EMAIL",
+              "start": 10,
+              "end": 26,
+              "score": null,
+              "score_kind": "deterministic",
+              "detector": "regex-draft-v1",
+              "person_id": "p1"
+            }
+          ]
+        }
+      ],
+      "prior_verdict": {
+        "decision": "alert",
+        "first_violation_message_id": 2,
+        "coverage_complete": true,
+        "reason": null,
+        "persons": [
+          {
+            "person_id": "p1",
+            "decision": "alert",
+            "rule": "two_orange",
+            "risk_score": null,
+            "markers": [
+              {
+                "message_id": 1,
+                "type": "PHONE",
+                "start": 12,
+                "end": 28
+              },
+              {
+                "message_id": 2,
+                "type": "EMAIL",
+                "start": 10,
+                "end": 26
+              }
+            ],
+            "special_category": false
+          }
+        ]
+      },
+      "note": "Иллюстрация уверенного отзыва факта; NER не доказывает эту способность."
+    },
+    {
+      "name": "unresolved_person",
+      "request": {
+        "session_id": "s-unresolved",
+        "message": {
+          "message_id": 1,
+          "role": "user",
+          "text": "🙂 Мой телефон +7 000 000-00-01."
+        },
+        "session_epoch": "epoch-unresolved",
+        "expected_state_version": 0
+      },
+      "response": {
+        "session_id": "s-unresolved",
+        "session_epoch": "epoch-unresolved",
+        "state_version": 1,
+        "policy_version": "draft-two-orange-v1",
+        "results": [
+          {
+            "message_id": 1,
+            "analysis_status": "analyzed",
+            "entities": [
+              {
+                "type": "PHONE",
+                "start": 14,
+                "end": 30,
+                "score": null,
+                "score_kind": "deterministic",
+                "detector": "regex-draft-v1",
+                "person_id": null
+              }
+            ],
+            "message_verdict": {
+              "has_signals": true,
+              "decision": "unknown"
+            },
+            "session_verdict": {
+              "decision": "unknown",
+              "first_violation_message_id": null,
+              "coverage_complete": false,
+              "reason": "person_unresolved",
+              "persons": []
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "name": "old_retry",
+      "http_status": 409,
+      "response": {
+        "code": "OUT_OF_ORDER",
+        "message": "Older receipt unavailable; inspect state before continuing.",
+        "state": {
+          "session_id": "s-batch",
+          "session_epoch": "epoch-batch",
+          "state_version": 2,
+          "next_message_id": 3,
+          "policy_version": "draft-two-orange-v1",
+          "decision": "alert",
+          "first_violation_message_id": 2,
+          "coverage_complete": true,
+          "reason": null
+        }
+      }
+    },
+    {
+      "name": "changed_payload",
+      "http_status": 409,
+      "request": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "expected_state_version": 1,
+        "message": {
+          "message_id": 2,
+          "role": "user",
+          "text": "Другое содержимое."
+        }
+      },
+      "conflicts_with": "continuation_expected_version",
+      "response": {
+        "code": "MESSAGE_CONFLICT",
+        "message": "Accepted message content differs; state unchanged.",
+        "state": {
+          "session_id": "s-batch",
+          "session_epoch": "epoch-batch",
+          "state_version": 2,
+          "next_message_id": 3,
+          "policy_version": "draft-two-orange-v1",
+          "decision": "alert",
+          "first_violation_message_id": 2,
+          "coverage_complete": true,
+          "reason": null
+        }
+      }
+    },
+    {
+      "name": "stale_version",
+      "http_status": 409,
+      "response": {
+        "code": "STATE_CONFLICT",
+        "message": "Version differs; inspect state before continuing.",
+        "state": {
+          "session_id": "s-batch",
+          "session_epoch": "epoch-batch",
+          "state_version": 2,
+          "next_message_id": 3,
+          "policy_version": "draft-two-orange-v1",
+          "decision": "alert",
+          "first_violation_message_id": 2,
+          "coverage_complete": true,
+          "reason": null
+        }
+      }
+    },
+    {
+      "name": "expired_epoch",
+      "http_status": 410,
+      "response": {
+        "code": "SESSION_EXPIRED",
+        "message": "Epoch unavailable; create a session explicitly.",
+        "state": null
+      }
+    },
+    {
+      "name": "get_missing",
+      "http_status": 404,
+      "response": {
+        "code": "SESSION_NOT_FOUND",
+        "message": "No live session.",
+        "state": null
+      }
+    }
+  ],
+  "lifecycle": [
+    {
+      "name": "create",
+      "method": "POST",
+      "path": "/v1/sessions",
+      "http_status": 201,
+      "request": {
+        "session_id": "s-single"
+      },
+      "response": {
+        "session_id": "s-single",
+        "session_epoch": "epoch-single",
+        "state_version": 0,
+        "next_message_id": 1,
+        "policy_version": "draft-two-orange-v1",
+        "decision": "no_alert",
+        "first_violation_message_id": null,
+        "coverage_complete": true,
+        "reason": null
+      }
+    },
+    {
+      "name": "read_after_conflict",
+      "method": "GET",
+      "path": "/v1/sessions/s-batch",
+      "http_status": 200,
+      "response": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "state_version": 2,
+        "next_message_id": 3,
+        "policy_version": "draft-two-orange-v1",
+        "decision": "alert",
+        "first_violation_message_id": 2,
+        "coverage_complete": true,
+        "reason": null
+      }
+    },
+    {
+      "name": "reset",
+      "method": "POST",
+      "path": "/v1/sessions/s-batch/reset",
+      "http_status": 200,
+      "request": {
+        "session_epoch": "epoch-batch",
+        "expected_state_version": 2
+      },
+      "before": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch",
+        "state_version": 2,
+        "next_message_id": 3,
+        "policy_version": "draft-two-orange-v1",
+        "decision": "alert",
+        "first_violation_message_id": 2,
+        "coverage_complete": true,
+        "reason": null
+      },
+      "response": {
+        "session_id": "s-batch",
+        "session_epoch": "epoch-batch-reset",
+        "state_version": 0,
+        "next_message_id": 1,
+        "policy_version": "draft-two-orange-v1",
+        "decision": "no_alert",
+        "first_violation_message_id": null,
+        "coverage_complete": true,
+        "reason": null
+      }
+    }
+  ]
+}

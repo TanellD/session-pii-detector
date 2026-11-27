@@ -1,0 +1,20 @@
+{
+  "version": "compatible-annotation-v1",
+  "radeon": {
+    "base_url": "https://developer.amd.com.cn/radeon/api/v1",
+    "api_key_env": "RADEON_API_KEY",
+    "models": ["Gemma-4-31B-IT", "Qwen3.8-27B"],
+    "catalog_evidence": "user_supplied_provider_cards_2026-11-19",
+    "protocol": "chat_completions",
+    "structured_outputs_status": "requires_live_probe",
+    "usage_points": "relative_usage_not_currency_per_user_supplied_card",
+    "local_weights_revision": "not_reported_by_provider"
+  },
+  "local": {
+    "base_url": "http://127.0.0.1:8000/v1",
+    "api_key_env": "LLM_API_KEY",
+    "models": [],
+    "protocol": "chat_completions",
+    "structured_outputs_status": "depends_on_serving_configuration"
+  }
+}
