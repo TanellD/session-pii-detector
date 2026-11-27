@@ -1,0 +1,11 @@
+{
+  "version": "gemma-owner-linker-v2",
+  "model": "Gemma-4-31B-IT",
+  "base_url": "https://developer.amd.com.cn/radeon/api/v1",
+  "api_key_env": "RADEON_API_KEY",
+  "timeout_seconds": 90,
+  "max_tokens": 1024,
+  "max_candidates": 64,
+  "max_context_facts": 128,
+  "context_messages": 3
+}

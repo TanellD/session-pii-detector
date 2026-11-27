@@ -1,0 +1,19 @@
+services:
+  pii-service:
+    image: session-pii:scaffold
+    build: .
+    ports:
+      - "127.0.0.1:${PII_HOST_PORT:-8000}:8000"
+    environment:
+      PII_DETECTOR_MODE: "${PII_DETECTOR_MODE:-regex}"
+      PII_TTL_SECONDS: "1800"
+      PII_MAX_SESSIONS: "1000"
+      PII_MAX_MESSAGES: "1000"
+      PII_MAX_ENTITIES: "1000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

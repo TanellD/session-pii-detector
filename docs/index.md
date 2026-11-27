@@ -1,8 +1,62 @@
 # База знаний проекта
 
+- [Датасет и проверка дешёвых линкеров](data/cheap-linker-benchmark.md)
+- [Проверка пакета сравнения линкеров](experiments/2026-11-26-cheap-linker-package.md)
+
+- [Подбор только порогов для максимизации F2-timely](experiments/2026-11-26-validation-thresholds-only.md)
+
+- [Выгрузка только regex + GLiNER для бенчмарка](experiments/2026-11-26-benchmark-ner-export.md)
+
+- [Точка продолжения validation и подбора риска](experiments/2026-11-26-validation-checkpoint.md)
+
+- [Validation с кэшем моделей и автоматическим подбором весов и порогов риска](experiments/2026-11-26-cached-validation-risk-calibration.md)
+
+- [Синтетический train/validation/test для NER, линкера и алертов](experiments/2026-11-26-session-benchmark-2400.md)
+
+- [Пробная генерация v2: структурная проверка, слепое ревью и оставшиеся ограничения](experiments/2026-11-26-generation-v2-trial.md)
+
+- [Логичность и честность пилота: содержательный аудит и найденные смещения](experiments/2026-11-26-difficulty-pilot-quality-audit.md)
+
+- [Авторский пилот: три сложности и части train/validation/test](experiments/2026-11-26-difficulty-pilot-90.md)
+
+- [Примеры каждого семейства сценариев средней сложности](experiments/2026-11-26-medium-scenario-examples.md)
+
+- [Подбор весов риска и порогов на разбиении 90/90](experiments/2026-11-25-risk-tuning-90-90.md)
+
+- [Исправление эталона сочетаний по калькулятору разметки](experiments/2026-11-25-weight-label-calculator-review.md)
+
+- [300 сессий: только жёлтые и сочетания с оранжевыми, NER v2 и Gemma](experiments/2026-11-25-weight-combinations-300.md)
+
+- [Сложные диалоги: 200 сессий, NER v2 и Gemma](experiments/2026-11-25-complex-200.md)
+
+- [NER v2: границы контактов и контекст ФИО](experiments/2026-11-25-adapter-v2.md)
+- [Точка продолжения](experiments/2026-11-25-ner-gemma-checkpoint.md)
+
+- [Исправленный NER + Gemma: параллельные прогоны на двух корпусах](experiments/2026-11-25-revised-ner-gemma-two-corpora.md)
+
+- [Проверка зафиксированного адаптера на следующих сессиях](experiments/2026-11-25-adapter-next-250.md)
+
+- [Отдельная ревизия адаптера: исправления и сравнение экстракции](experiments/2026-11-25-adapter-revision.md)
+
+- [Реальные выходы GLiNER + regex, Gemma и итоговые метрики сервиса](experiments/2026-11-25-gemma-real-ner-250.md)
+
+- [Notebook и выгрузка для локального Qwen-линкера в Colab](api/colab-linker.md)
+
+- [Компактный MiniCPM как линкер: отдельный прогон и live-отчёт](experiments/2026-11-25-minicpm-linker-250.md)
+
+- [Живой пилот Gemma-линера: владельцы, контекст и задержка API](experiments/2026-11-24-gemma-linker-baseline.md)
+
+- [Gemma как baseline линкера: контракт, контекст и запуск](api/gemma-linker-baseline.md)
+
+- [Установка GLiNER и реальный прогон сессионного сервиса](experiments/2026-11-24-gliner-runtime-250.md)
+
+- [Случайный линкер: раздельная оценка компонентов и HTTP на срезе Gemma](experiments/2026-11-24-random-linker-250.md)
+
 Точка входа. Хранитель базы знаний обновляет эту страницу раз в 2 недели.
 
 ## Проект
+
+- [Сессионный сервис, адаптер и правила интеграции](api/service-scaffold.md)
 
 - [Изменения классов, адресного этапа, API и метрик для команды](project/annotation-team-handoff.md)
 
@@ -24,6 +78,16 @@
 - [Закрытие пробелов: рабочие решения и запуск калькулятора](project/annotation-gap-resolution-2026-11-15.md)
 
 ## Исследование
+
+- [Повторный аудит новых ответов Gemma и Qwen](experiments/2026-11-24-annotation-update-audit.md)
+
+- [Аудит завершённых аннотаций Gemma: модель, инструкция и обработчик](experiments/2026-11-24-gemma-partial-annotation-audit.md)
+
+- [500 сессий по исходным сценариям Андрея и сравнение с первой тысячей](experiments/2026-11-23-andrey-500-comparison.md)
+
+- [Тысяча синтетических сессий: авторская разметка и проверка Gemma](experiments/2026-11-23-annotation-1000.md)
+
+- [Проверка интеграции адаптера с сервисом](experiments/2026-11-22-service-adapter-integration.md)
 
 - [Завершение адаптера](experiments/2026-11-22-adapter-finalization.md) · [Миграция корпуса и совместные владельцы](experiments/2026-11-22-corpus-finalization.md)
 
@@ -91,6 +155,8 @@
 - [Архитектура](kb/architecture.md)
 
 ## Данные
+
+- [Переиспользуемая политика генерации синтетических сессий](data/synthetic-session-generation-policy.md)
 
 - [Синтетический корпус и разметка первого алерта (#33, #40)](data/session-alerts-pilot.md)
 
