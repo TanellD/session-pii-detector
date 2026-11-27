@@ -1,11 +1,25 @@
 services:
   pii-service:
-    image: session-pii:scaffold
-    build: .
+    image: "session-pii:service-v2-${PII_DOCKER_TARGET:-runtime}"
+    build:
+      context: .
+      target: "${PII_DOCKER_TARGET:-runtime}"
     ports:
       - "127.0.0.1:${PII_HOST_PORT:-8000}:8000"
     environment:
       PII_DETECTOR_MODE: "${PII_DETECTOR_MODE:-regex}"
+      PII_ADAPTER_REVISION: "${PII_ADAPTER_REVISION:-v2}"
+      PII_LINKER_MODE: "${PII_LINKER_MODE:-bypass}"
+      PII_LINKER_FALLBACK: "${PII_LINKER_FALLBACK:-error}"
+      PII_LINKER_CONFIG: /app/configs/linker-gemma-baseline.json
+      PII_LINKER_TIMEOUT_SECONDS: "${PII_LINKER_TIMEOUT_SECONDS:-90}"
+      PII_LINKER_CONCURRENCY: "${PII_LINKER_CONCURRENCY:-1}"
+      PII_BENCHMARK_LINKER_DELAY_MS: "${PII_BENCHMARK_LINKER_DELAY_MS:-0}"
+      PII_RISK_POLICY: "${PII_RISK_POLICY:-/app/configs/runtime-risk-policy.json}"
+      PII_MAX_INFLIGHT: "${PII_MAX_INFLIGHT:-32}"
+      PII_TORCH_THREADS: "${PII_TORCH_THREADS:-2}"
+      PII_LOG_SAMPLE_RATE: "${PII_LOG_SAMPLE_RATE:-1}"
+      RADEON_API_KEY: "${RADEON_API_KEY:-}"
       PII_TTL_SECONDS: "1800"
       PII_MAX_SESSIONS: "1000"
       PII_MAX_MESSAGES: "1000"
@@ -17,3 +31,8 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

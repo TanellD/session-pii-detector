@@ -1,5 +1,7 @@
 # База знаний проекта
 
+- [Docker-сервис v2: сборка, API и тайминги](api/docker-service-v2.md)
+
 - [Датасет и проверка дешёвых линкеров](data/cheap-linker-benchmark.md)
 - [Проверка пакета сравнения линкеров](experiments/2026-11-26-cheap-linker-package.md)
 

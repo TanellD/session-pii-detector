@@ -1,0 +1,8 @@
+# Optional: current application code over an already built dependency image.
+services:
+  pii-service:
+    volumes:
+      - type: bind
+        source: ./src/session_pii
+        target: /app/src/session_pii
+        read_only: true

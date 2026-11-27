@@ -68,4 +68,4 @@ python -m venv .venv
 
 ## Сессионный HTTP-сервис
 
-Сборка сервиса находится в src/session_pii. По умолчанию подключён regex-адаптер Олеси; GLiNER включается явно с локально подготовленной моделью. Линкер заменяемый, начальный режим использует заглушку и явно возвращает неполноту анализа. Запуск: docker compose up --build. Подробности: [сервис и подключение компонентов](docs/api/service-scaffold.md).
+Сборка сервиса находится в src/session_pii. Docker runtime v2 по умолчанию использует regex + адаптер v2 и явный bypass линкера; GLiNER и Gemma включаются отдельно. Запуск: docker compose up --build. [Docker v2: сборка, API, логи и тайминги](docs/api/docker-service-v2.md); [исходный каркас](docs/api/service-scaffold.md).

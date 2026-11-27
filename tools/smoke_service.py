@@ -9,13 +9,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base-url',default='http://127.0.0.1:8000')
     parser.add_argument('--expect-adapter', action='store_true')
+    parser.add_argument('--timeout', type=float, default=10, help='HTTP timeout in seconds')
     args = parser.parse_args()
 
     def call(path, payload=None):
         body = json.dumps(payload).encode() if payload is not None else None
         request = Request(args.base_url.rstrip('/')+path,data=body,
                           headers={'Content-Type':'application/json'} if body else {})
-        with urlopen(request,timeout=10) as response:
+        with urlopen(request,timeout=args.timeout) as response:
             return json.load(response)
 
     health = call('/healthz')
