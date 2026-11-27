@@ -1,6 +1,7 @@
 """Small diagnostic rules; checksum validity is not proof of an assigned identity."""
 
 import re
+from .phone_format import PHONE_BODY, valid_phone_span
 
 
 def digits(value):
@@ -53,7 +54,7 @@ PATTERNS = [
     (
         "PHONE",
         re.compile(
-            r"(?<!\d)(?P<value>(?:\+7|8)[ -]?\(?\d{3}\)?[ -]?\d{3}[ -]?\d{2}[ -]?\d{2})(?!\d)"
+            rf"(?<![0-9])(?P<value>{PHONE_BODY})(?![0-9])"
         ),
         None,
     ),
@@ -80,11 +81,151 @@ PATTERNS = [
 ]
 
 
-def predict(text):
+# ---------------------------------------------------------------------------
+# Address chain. Covers:
+#   г.Москва, ул.Тверская, д.12
+#   г. Москва, ул. Тверская, д. 12
+#   Москва, ул.Тверская, д.12
+#   г.Москва, Тверская, 12          (street without marker, house without marker)
+#   г.Москва, Тверская, 12, кв. 5
+#   123456, г.Москва, ул.Тверская, д.12
+#   Санкт-Петербург, Невский проспект, 28
+# ---------------------------------------------------------------------------
+
+_CITY = r"(?:[А-ЯЁ][а-яё-]+(?:-[А-ЯЁ][а-яё-]+)?)"
+_CITY_MARKED = rf"(?:г\.\s*|город\s+)?{_CITY}"
+
+_STREET_MARKERS = (
+    r"(?:ул\.|улица|пр\.|пр-т|проспект|пер\.|переулок|"
+    r"б-р|бульвар|ш\.|шоссе|пл\.|площадь|наб\.|набережная|"
+    r"проезд|туп\.|тупик)"
+)
+_STREET = rf"{_STREET_MARKERS}\s*{_CITY}(?:\s+{_CITY})?"
+_STREET_PLAIN = rf"{_CITY}(?:\s+{_CITY})?"  # «Тверская», «Невский проспект»
+
+_HOUSE = r"(?:д\.\s*|дом\s+)?\d+[А-Яа-я]?(?:[/-]\d+)?"
+_CORP = r"(?:корп\.|корпус|стр\.|строение)\s*\d+[А-Яа-я]?"
+_FLAT = r"(?:кв\.|квартира)\s*\d+"
+_INDEX = r"\d{6}"
+
+ADDRESS_CHAIN_RE = re.compile(
+    rf"(?:(?P<index>{_INDEX})\s*,\s*)?"
+    rf"{_CITY_MARKED}"
+    rf"\s*,\s*(?:{_STREET}|{_STREET_PLAIN})"
+    rf"\s*,\s*{_HOUSE}"
+    rf"(?:\s*,\s*{_CORP})?"
+    rf"(?:\s*,\s*{_FLAT})?"
+)
+
+
+def predict_address_chains(text):
+    """Find full address chains and return ADDRESS spans."""
+    result = []
+    for match in ADDRESS_CHAIN_RE.finditer(text):
+        result.append(
+            {
+                "type": "ADDRESS",
+                "start": match.start(),
+                "end": match.end(),
+                "score": None,
+                "source": "regex",
+                "detector_version": "pii_smoke_rules-v2",
+            }
+        )
+    return result
+
+# ---------------------------------------------------------------------------
+# Initials / short name forms. Produced as PERSON spans and resolved later
+# by adapter_rules.split_person into LAST_NAME / FIRST_NAME / PATRONYMIC.
+#
+# Covered:
+#   Иванова И.И.        (surname first, two initials, space)
+#   Иванова И. И.       (surname first, two initials, space inside)
+#   И.И. Иванова        (initials first, two, space before surname)
+#   И. И. Иванова       (initials first, two, space inside)
+#   И.И.Иванова         (initials first, two, no space before surname)
+#   И.Иванова           (initials first, one, no space before surname)
+#   И. Иванова          (initials first, one, space before surname)
+#   Иванова И.          (surname first, one initial)
+# ---------------------------------------------------------------------------
+_INITIAL = r"[А-ЯЁ]"
+_SURNAME = r"[А-ЯЁ][а-яё-]+"
+
+INITIALS_SURNAME_FIRST = re.compile(
+    rf"\b(?P<surname>{_SURNAME})\s+(?P<first>{_INITIAL})\.\s*(?P<patronymic>{_INITIAL})\."
+)
+
+INITIALS_SURNAME_FIRST_ONE = re.compile(
+    rf"\b(?P<surname>{_SURNAME})\s+(?P<first>{_INITIAL})\."
+)
+
+INITIALS_SURNAME_LAST = re.compile(
+    rf"\b(?P<first>{_INITIAL})\.\s*(?P<patronymic>{_INITIAL})\.\s*(?P<surname>{_SURNAME})"
+)
+
+INITIALS_SURNAME_LAST_NO_SPACE = re.compile(
+    rf"\b(?P<first>{_INITIAL})\.\s*(?P<patronymic>{_INITIAL})\.(?P<surname>{_SURNAME})"
+)
+
+INITIALS_ONE_SURNAME = re.compile(
+    rf"\b(?P<first>{_INITIAL})\.\s*(?P<surname>{_SURNAME})"
+)
+
+INITIALS_ONE_SURNAME_NO_SPACE = re.compile(
+    rf"\b(?P<first>{_INITIAL})\.(?P<surname>{_SURNAME})"
+)
+
+
+def predict_initials(text):
+    """Find short name forms and return PERSON spans for later split."""
+    result = []
+
+    def add(match):
+        result.append(
+            {
+                "type": "PERSON",
+                "start": match.start(),
+                "end": match.end(),
+                "score": None,
+                "source": "regex",
+                "detector_version": "pii_smoke_rules-v2",
+            }
+        )
+
+    for pattern in (
+        INITIALS_SURNAME_FIRST,
+        INITIALS_SURNAME_LAST,
+        INITIALS_SURNAME_LAST_NO_SPACE,
+    ):
+        for match in pattern.finditer(text):
+            add(match)
+
+    for pattern in (
+        INITIALS_SURNAME_FIRST_ONE,
+        INITIALS_ONE_SURNAME,
+        INITIALS_ONE_SURNAME_NO_SPACE,
+    ):
+        for match in pattern.finditer(text):
+            add(match)
+
+    result.sort(key=lambda e: (e["start"], -(e["end"] - e["start"])))
+    deduped = []
+    for entity in result:
+        if not any(
+            e["start"] <= entity["start"] and entity["end"] <= e["end"]
+            for e in deduped
+        ):
+            deduped.append(entity)
+    return deduped
+
+
+def predict(text, *, require_valid_checksum=True):
     result = []
     for kind, pattern, validator in PATTERNS:
         for match in pattern.finditer(text):
-            if validator is None or validator(match.group("value")):
+            if kind == "PHONE" and not valid_phone_span(text, match.start("value"), match.end("value")):
+                continue
+            if validator is None or not require_valid_checksum or validator(match.group("value")):
                 result.append(
                     {
                         "type": kind,
@@ -94,6 +235,7 @@ def predict(text):
                         "source": "regex",
                     }
                 )
+    result.extend(predict_address_chains(text))
     return result
 
 

@@ -1,0 +1,166 @@
+{
+  "version": "2026-11-16-pilot",
+  "purpose": "research_of_joint_name_statistics_not_population_registry",
+  "active_direction": "public_documents_user_confirmed_no_social_api_access",
+  "batch_collector": "tools/batch_public_fullname_statistics.py",
+  "sources": [
+    {
+      "id": "cleaned_registry_name_parts_ngodata",
+      "url": "https://ngodata.ru/dataset/russiannames",
+      "author_description": "https://t.me/begtin/2402",
+      "type": "marginal_name_part_counts_from_business_registers",
+      "status": "author_description_verified_dataset_card_http_403_files_not_audited",
+      "patronymic_fname_semantics": "father_given_name_not_name_of_patronymic_bearer",
+      "national_population_frequency_use": "not_accepted"
+    },
+    {
+      "id": "cadastral_engineers_guild_registry",
+      "url": "https://kadastrsro.ru/index.php/reestr/",
+      "download_url": "https://kadastrsro.ru/index.php/reestr/?download=csv",
+      "type": "professional_registry_with_fullnames",
+      "status": "html_pagination_collected_minimal_cache_deduplicated_research_only",
+      "reproduce": "python -X utf8 tools/study_fns_sro_patronymics.py",
+      "count_unit": "certificate_name_concordant_records_not_verified_unique_national_people",
+      "national_population_frequency_use": "not_accepted"
+    },
+    {
+      "id": "vk_community_members_pilot",
+      "url": "https://vk.ru/vk",
+      "type": "public_community_member_accounts",
+      "status": "bounded_member_sample_cached_russian_response_language_parser_v2",
+      "reproduce": "python -X utf8 tools/collect_vk_group_members.py --group vk --limit 1000000 --download",
+      "count_unit": "accounts_not_verified_people",
+      "national_population_frequency_use": "not_accepted"
+    },
+    {
+      "id": "fns_rsmp_ip_local_pilot",
+      "url": "https://www.nalog.gov.ru/opendata/7707329152-rsmp/",
+      "type": "official_sme_register_individual_entrepreneurs",
+      "status": "bounded_fullname_sample_cached_locally_user_authorized",
+      "reproduce": "python -X utf8 tools/research_name_pairs.py",
+      "count_unit": "IP_records_deduplicated_by_INN_in_memory",
+      "personal_rows_in_git": false,
+      "national_population_frequency_use": "not_accepted"
+    },
+    {
+      "id": "wikipedia_explicit_fullnames",
+      "url": "https://ru.wikipedia.org/w/api.php",
+      "type": "biography_intro_text",
+      "status": "bounded_pilot_completed",
+      "reproduce": "python -X utf8 tools/pilot_wikipedia_fullnames.py --download",
+      "individual_records_saved": false,
+      "national_population_frequency_use": "not_accepted",
+      "count_unit": "wikidata_items_with_supported_explicit_article_fullname"
+    },
+    {
+      "id": "wikidata_ru_name_father",
+      "url": "https://query.wikidata.org/",
+      "type": "structured_biographies",
+      "status": "aggregate_property_coverage_query_completed",
+      "reproduce": "python -X utf8 tools/check_wikidata_name_coverage.py --download",
+      "individual_records_collected": false,
+      "national_population_frequency_use": "not_accepted"
+    },
+    {
+      "id": "minjust_professional_registers",
+      "url": "https://www.minjust.gov.ru/ru/pages/opendata/",
+      "type": "professional_register_catalog",
+      "status": "official_catalog_verified_machine_readable_export_not_confirmed",
+      "next_check": "schema_snapshot_status_and_registration_key_stability"
+    },
+    {
+      "id": "fns_register_integration",
+      "url": "https://www.nalog.gov.ru/rn77/service/egrip2/egrip_vzayim/",
+      "type": "business_register_integration",
+      "status": "official_access_description_verified_access_not_configured",
+      "count_unit": "roles_and_records_require_person_deduplication"
+    },
+    {
+      "id": "hf_names_popularity_scores",
+      "url": "https://huggingface.co/datasets/rustemgareev/russian-names",
+      "type": "given_name_rank_dictionary",
+      "status": "dataset_card_verified_scores_are_normalized_ranks_not_probabilities",
+      "frequency_use": "not_accepted"
+    },
+    {
+      "id": "kaggle_russian_cyrillic_names",
+      "url": "https://www.kaggle.com/datasets/rai220/russian-cyrillic-names-and-sex",
+      "type": "candidate_name_corpus",
+      "status": "card_found_readable_provenance_not_obtained",
+      "collection": "not_started"
+    },
+    {
+      "id": "msu_sa_recent_master_cohorts",
+      "url": "https://sa.cs.msu.ru/alumni",
+      "type": "university_graduation_archive",
+      "status": "bounded_batch_completed",
+      "parser": "fio_column_in_tables",
+      "person_deduplication": "not_established_written_name_overlap_is_sensitivity_only",
+      "count_unit": "supported_publication_rows"
+    },
+    {
+      "id": "tsu_botany_recent",
+      "url": "https://bot.tsu.ru/department/graduates/",
+      "type": "university_graduation_archive",
+      "status": "bounded_batch_completed",
+      "parser": "bold_names_under_selected_year_headings",
+      "person_deduplication": "not_established",
+      "count_unit": "supported_publication_rows"
+    },
+    {
+      "id": "nsu_physical_chemistry_archive",
+      "url": "https://hf.nsu.ru/alumni.html",
+      "type": "university_graduation_archive",
+      "status": "found_in_web_local_access_failed_not_collected"
+    },
+    {
+      "id": "msu_sa_master_2024",
+      "url": "https://sa.cs.msu.ru/node/466",
+      "catalog": "https://sa.cs.msu.ru/alumni",
+      "type": "university_graduation_list",
+      "status": "bounded_in_memory_pilot_completed",
+      "count_unit": "recognized_publication_rows_not_verified_unique_people",
+      "person_deduplication": "not_established",
+      "population_scope": "one_department_one_graduating_cohort",
+      "full_name_fields": "three_parts_written_together_supported_by_narrow_parser",
+      "reproduce": "python -X utf8 tools/pilot_public_fullname_statistics.py --download"
+    },
+    {
+      "id": "vk",
+      "url": "https://raw.githubusercontent.com/VKCOM/vk-api-schema/master/users/objects.json",
+      "type": "social_network",
+      "status": "vkid_user_info_authorized_social_users_search_rejected_code_5",
+      "count_unit": "accounts_not_unique_people",
+      "full_name_fields": "first_name_last_name_no_separate_patronymic_in_checked_schema",
+      "collection": "not_started",
+      "reproduce": "python -X utf8 tools/collect_vk_name_pairs.py"
+    },
+    {
+      "id": "ok",
+      "url": "https://apiok.ru/en/dev/methods/rest/users/users.getInfo",
+      "type": "social_network",
+      "status": "group_and_profile_methods_verified_probe_prepared_credentials_missing",
+      "reproduce": "python -X utf8 tools/probe_ok_name_access.py",
+      "count_unit": "accounts_not_unique_people",
+      "full_name_fields": "completeness_not_established",
+      "collection": "not_started"
+    },
+    {
+      "id": "mail_answers",
+      "url": "https://otvet.mail.ru/",
+      "type": "question_answer_profiles",
+      "status": "documented_collection_access_not_established",
+      "count_unit": "profiles_or_mentions_not_people",
+      "full_name_fields": "not_established_display_name_may_be_pseudonym",
+      "collection": "not_started"
+    },
+    {
+      "id": "kubstu_admission_example",
+      "url": "https://kubstu.ru/r-13480",
+      "type": "university_admission_list",
+      "status": "institution_describes_unique_applicant_codes",
+      "full_name_fields": "not_available_for_name_frequency_task_from_this_description",
+      "collection": "not_started"
+    }
+  ]
+}

@@ -1,31 +1,184 @@
 # База знаний проекта
 
+- [Датасет и проверка дешёвых линкеров](data/cheap-linker-benchmark.md)
+- [Проверка пакета сравнения линкеров](experiments/2026-11-26-cheap-linker-package.md)
+
+- [Подбор только порогов для максимизации F2-timely](experiments/2026-11-26-validation-thresholds-only.md)
+
+- [Выгрузка только regex + GLiNER для бенчмарка](experiments/2026-11-26-benchmark-ner-export.md)
+
+- [Точка продолжения validation и подбора риска](experiments/2026-11-26-validation-checkpoint.md)
+
+- [Validation с кэшем моделей и автоматическим подбором весов и порогов риска](experiments/2026-11-26-cached-validation-risk-calibration.md)
+
+- [Синтетический train/validation/test для NER, линкера и алертов](experiments/2026-11-26-session-benchmark-2400.md)
+
+- [Пробная генерация v2: структурная проверка, слепое ревью и оставшиеся ограничения](experiments/2026-11-26-generation-v2-trial.md)
+
+- [Логичность и честность пилота: содержательный аудит и найденные смещения](experiments/2026-11-26-difficulty-pilot-quality-audit.md)
+
+- [Авторский пилот: три сложности и части train/validation/test](experiments/2026-11-26-difficulty-pilot-90.md)
+
+- [Примеры каждого семейства сценариев средней сложности](experiments/2026-11-26-medium-scenario-examples.md)
+
+- [Подбор весов риска и порогов на разбиении 90/90](experiments/2026-11-25-risk-tuning-90-90.md)
+
+- [Исправление эталона сочетаний по калькулятору разметки](experiments/2026-11-25-weight-label-calculator-review.md)
+
+- [300 сессий: только жёлтые и сочетания с оранжевыми, NER v2 и Gemma](experiments/2026-11-25-weight-combinations-300.md)
+
+- [Сложные диалоги: 200 сессий, NER v2 и Gemma](experiments/2026-11-25-complex-200.md)
+
+- [NER v2: границы контактов и контекст ФИО](experiments/2026-11-25-adapter-v2.md)
+- [Точка продолжения](experiments/2026-11-25-ner-gemma-checkpoint.md)
+
+- [Исправленный NER + Gemma: параллельные прогоны на двух корпусах](experiments/2026-11-25-revised-ner-gemma-two-corpora.md)
+
+- [Проверка зафиксированного адаптера на следующих сессиях](experiments/2026-11-25-adapter-next-250.md)
+
+- [Отдельная ревизия адаптера: исправления и сравнение экстракции](experiments/2026-11-25-adapter-revision.md)
+
+- [Реальные выходы GLiNER + regex, Gemma и итоговые метрики сервиса](experiments/2026-11-25-gemma-real-ner-250.md)
+
+- [Notebook и выгрузка для локального Qwen-линкера в Colab](api/colab-linker.md)
+
+- [Компактный MiniCPM как линкер: отдельный прогон и live-отчёт](experiments/2026-11-25-minicpm-linker-250.md)
+
+- [Живой пилот Gemma-линера: владельцы, контекст и задержка API](experiments/2026-11-24-gemma-linker-baseline.md)
+
+- [Gemma как baseline линкера: контракт, контекст и запуск](api/gemma-linker-baseline.md)
+
+- [Установка GLiNER и реальный прогон сессионного сервиса](experiments/2026-11-24-gliner-runtime-250.md)
+
+- [Случайный линкер: раздельная оценка компонентов и HTTP на срезе Gemma](experiments/2026-11-24-random-linker-250.md)
+
 Точка входа. Хранитель базы знаний обновляет эту страницу раз в 2 недели.
 
 ## Проект
+
+- [Сессионный сервис, адаптер и правила интеграции](api/service-scaffold.md)
+
+- [Изменения классов, адресного этапа, API и метрик для команды](project/annotation-team-handoff.md)
+
+- [Оценка жителей по строке адреса](project/address-population-estimator.md)
+
+- [Общий конфиг обработчика и контекст LLM-разметчика](project/annotation-context-config-2026-11-18.md)
+
+- [Рабочее правило: неполное имя и дополнительный личный атрибут](project/partial-name-alert-working-rule-2026-11-17.md)
+
+- [Предложение для ТЗ: исследование частей имени и правило полного ФИО](project/fio-annotation-rule-proposal-2026-11-17.md)
 - [Постановка задачи](project/brief.md)
 - [Роадмап и чекпоинты](project/roadmap.md)
 - [Команда и встречи](project/team.md)
 - [Вопросы к ментору и команде](project/open-questions.md)
 - [Глоссарий](project/glossary.md)
+- [Уточнения политики первого алерта и принадлежности атрибутов](project/alert-policy-proposal-2026-11-13.md)
+- [Адреса, телефоны и email: синтетические случаи для ТЗ](project/orange-attributes-examples-2026-11-15.md)
+- [Уточнения оценщика: свежие данные, группы поселений, ФИО, hh и адреса](project/annotation-estimator-next-steps-2026-11-15.md)
+- [Закрытие пробелов: рабочие решения и запуск калькулятора](project/annotation-gap-resolution-2026-11-15.md)
 
 ## Исследование
+
+- [Повторный аудит новых ответов Gemma и Qwen](experiments/2026-11-24-annotation-update-audit.md)
+
+- [Аудит завершённых аннотаций Gemma: модель, инструкция и обработчик](experiments/2026-11-24-gemma-partial-annotation-audit.md)
+
+- [500 сессий по исходным сценариям Андрея и сравнение с первой тысячей](experiments/2026-11-23-andrey-500-comparison.md)
+
+- [Тысяча синтетических сессий: авторская разметка и проверка Gemma](experiments/2026-11-23-annotation-1000.md)
+
+- [Проверка интеграции адаптера с сервисом](experiments/2026-11-22-service-adapter-integration.md)
+
+- [Завершение адаптера](experiments/2026-11-22-adapter-finalization.md) · [Миграция корпуса и совместные владельцы](experiments/2026-11-22-corpus-finalization.md)
+
+- [Оценка первого сессионного алерта на синтетике (#41)](experiments/2026-11-20-session-alert-baselines.md)
+
+- [Сто синтетических сессий: уточнённая инструкция и последовательная Gemma](experiments/2026-11-19-annotation-100-gemma.md)
+
+- [Русский набор клиентских префиксов: Gemma, алерты и случайная перепроверка](experiments/2026-11-19-russian-session-dataset-gemma-review.md)
+
+- [Корпуса сессий: CONFIDE, DialogPII, HiCUPID, ABCD и русские task-oriented диалоги](research/notes/session-dataset-candidates-2026-11-19.md)
+
+- [Сравнение Gemma и Qwen на новых синтетических сессиях](experiments/2026-11-19-ten-session-model-comparison.md)
+
+- [Переразметка выбранных диалогов CONFIDE по ТЗ MVP](experiments/2026-11-19-confide-reannotation.md)
+
+- [Источники Владимира: какие сессии и классы подходят для разметки](experiments/2026-11-19-confide-annotation-audit.md)
+
+- [Статистические основания оценщика](research/notes/annotation-estimator-statistical-basis.md)
+
+- [Средние для неизвестной численности пунктов, улиц и домов](research/notes/mvp-average-fallbacks-2026-11-17.md)
+
+- [ФНС и СРО: отчества, совместные ИО и межисточниковая проверка](research/notes/fns-sro-patronymic-study-2026-11-17.md)
+
+- [Источники отчеств и совместных наблюдений ИО/ФИО](research/notes/patronymic-sources-2026-11-17.md)
+
+- [Достаточность корпуса VK для зависимости ФИ и порога алерта](research/notes/vk-annotation-evidence-2026-11-17.md)
+
+- [API Одноклассников: доступ, права приложения и возможность корпуса ФИ](research/notes/ok-api-name-access-2026-11-17.md)
+
+- [Викиданные: связи имени, фамилии, отчества и имени отца](research/notes/wikidata-name-father-2026-11-16.md)
+- [Википедия: пилот явно написанных ФИО и зависимости частей](research/notes/wikipedia-explicit-fullnames-2026-11-16.md)
+- [ФНС и Википедия: совместная ФИ и перенос на ФИО, локальный кеш](research/notes/fns-wiki-name-pairs-2026-11-16.md)
+- [VK API: настройка доступа и пилот пары «имя — фамилия»](research/notes/vk-api-name-pairs-setup-2026-11-16.md)
+- [VK: участники сообщества через groups.getMembers и локальный кеш](research/notes/vk-community-member-pairs-2026-11-16.md)
+
+- [Москва, взрослые реестры и готовые корпуса: проверка назначения](research/notes/name-sources-moscow-registries-corpora-2026-11-16.md)
+
+- [Расширение статистики ФИО по документам МГУ и ТГУ](research/notes/public-fullname-documents-batch-2026-11-16.md)
+
+- [Пилот статистики ФИО по открытым документам и профилям](research/notes/public-fullname-source-pilot-2026-11-16.md)
+
+- [Частоты ФИО: проверка источников и ошибка независимого произведения](research/notes/full-name-frequency-validation-2026-11-16.md)
+
+- [Зависимости признаков, ФИО, малые населённые пункты и должности](research/notes/attribute-dependence-and-occupation-mapping-2026-11-15.md)
 - [Источники](research/sources.md)
+- [География и население России: источники и воспроизведение](research/notes/russia-geography-population-2026-11-15.md)
+- [Статистика для правил разметки: региональные сайты, выгрузки и API](research/notes/statistics-sources-for-annotation-2026-11-15.md)
+- [Реестр региональных источников Росстата и пробелов покрытия](research/notes/rosstat-all-regions-2026-11-15.md)
+- [Рабочий справочник статистических оснований разметки](research/notes/annotation-statistics-handbook-2026-11-15.md)
+- [Пол и частоты ФИО; запуск сборщика статистики hh](research/notes/sex-name-probabilities-and-hh-runbook-2026-11-15.md)
+- [Выбранный источник профессиональной статистики: занятость Росстата](research/notes/rosstat-occupation-reference-2026-11-15.md)
 - [Исследование PII-детекторов: результат, эксперимент и API](project/detector-research-summary.md)
 
 ## Знания (заполняются по мере ответов на вопросы)
 - [ПДн и момент перехода сессии в ПДн](kb/pii-definition.md)
 - [Линковка сущностей](kb/entity-linking.md)
 - [Метрики](kb/metrics.md)
+- [Нормализация упоминаний](kb/normalization.md)
+- [Контракт упоминания адаптера](research/notes/mention-contract.md)
+- [Архитектура адаптера](research/notes/adapter-design.md)
+- [Покрытие и ограничения адаптера v2](research/notes/adapter-coverage.md)
 - [Открытые вопросы перед замером метрик](project/metrics-open-questions.md)
 - [Проект ТЗ на разметку для метрик](data/metrics-annotation-requirements.md)
 - [Бюджет латенси](kb/latency-budget.md)
 - [Архитектура](kb/architecture.md)
 
 ## Данные
+
+- [Переиспользуемая политика генерации синтетических сессий](data/synthetic-session-generation-policy.md)
+
+- [Синтетический корпус и разметка первого алерта (#33, #40)](data/session-alerts-pilot.md)
+
+- [Шаблоны пользовательских сессий и последовательная разметка без будущего](data/user-only-synthetic-sessions.md)
+
+- [Разметка Gemma/Qwen через Radeon Cloud и свой сервер](data/radeon-llm-annotation.md)
+
+- [Как пользоваться ТЗ и запускать разметку](data/annotation-workflow.md)
+
+- [Задание для основной LLM-разметки](data/llm-annotation-prompt.md)
+
+- [Таблица полей по классам для LLM-разметки](data/annotation-class-fields.md)
+
+- [Синтетические примеры MVP и разбор разногласий](data/annotation-synthetic-examples.md)
 - [Инструкция по разметке](data/annotation-guidelines.md)
+- [Предложенная версия правил первого алерта](data/annotation-guidelines-proposed-2026-11-15.md)
 - [Формат данных](data/schema.md)
 - [Карточка датасета](data/dataset-card.md)
 
 ## Журнал
+
+- [Первый проход LLM-разметки синтетических сессий](experiments/2026-11-18-llm-annotation-pilot.md)
+
+- [Средние численности пунктов и жилых домов: расчёт и предложения](experiments/2026-11-18-population-size-means.md)
 - [Решения (ADR)](decisions/) · [Инсайты](insights/) · [Эксперименты](experiments/) · [Встречи](meetings/)
